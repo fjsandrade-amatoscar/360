@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoria Interna - Formulário</title>
+    <link rel="icon" href="Amatoscar.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div id="report-header">
+        <span id="user-display-name" style="position: absolute; right: 60px; top: 8px;"></span>
+        <span id="current-report-id">Nenhuma auditoria carregada</span><span id="current-tab-name-separator" style="margin: 0 10px;">|</span><span id="current-tab-name">Informações Gerais</span>
+    </div>
+ <div id="sino-notificacoes" onclick="toggleNotificacoes()">
+        🔔
+        <span id="contador-notificacoes" class="hidden">0</span>
+    </div>
+    <div id="painel-notificacoes" class="hidden">
+        </div>
+    </div>
+    <div id="login-container" class="startup-actions">
+        <h3>Acesso à Plataforma de Auditorias</h3><br>
+        <img src="Amatoscar.png" alt="Logótipo da Empresa" class="company-logo"><br><br>
+        <input type="email" id="login-email" placeholder="Email" required><br>
+        <input type="password" id="login-password" placeholder="Password" required><br>
+        <button type="button" onclick="fazerLogin()">Entrar</button>
+        <div id="login-error" style="color: red; margin-top: 10px;"></div>
+    </div>
+
+    <div id="startup-actions" class="startup-actions hidden">
+        <h3>Auditoria Pós Venda 360</h3>
+        <h3>Bem-vindo. O que deseja fazer?</h3>
+        <button type="button" onclick="iniciarNovaAuditoria()">🆕 Iniciar Nova Auditoria</button>
+        <button type="button" onclick="mostrarListaDeAuditorias()">☁️ Carregar Auditoria da Nuvem</button>
+        <button type="button" onclick="mostrarConsolaDeGestao()" style="background-color: #ca8b39; margin-top: 10px;">⚙️ Gestão de Auditorias</button>
+        <button type="button" onclick="mostrarManualUtilizador()" style="background-color: #ca8b39; margin-top: 10px;">📖 Manual de Utilizador</button>
+    </div>
+
+    <div id="gestao-auditorias-container" class="main-content hidden">
+        <div class="container">
+            <div class="header-with-logo">
+                <img src="Amatoscar.png" alt="Logótipo da Empresa" class="company-logo">
+                <h1>Consola de Gestão de Auditorias</h1>
+            </div>
+            <button type="button" onclick="voltarAoMenuPrincipal()" class="btn-secondary">↩️ Voltar ao Menu</button>
+            <button type="button" onclick="mostrarDashboard()" style="background-color: #bf7616; margin-top: 10px;">📊 Dashboard</button>
+            <button type="button" onclick="mostrarEdicaoCriterios()" style="background-color: #bf7616; margin-top: 10px;">✏️ Editar Critérios de Avaliação</button>
+            <button type="button" onclick="mostrarPlaneamentoAuditoria()" style="background-color: #bf7616; margin-top: 10px;">📅 Planeamento de Auditoria</button>
+            <div id="filtros-consola" style="margin-top: 20px; margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9; display: flex; align-items: center; gap: 15px;">
+                <input type="text" id="search-input" placeholder="Pesquisar por ID, Local, Auditor..." style="flex-grow: 1; padding: 8px;">
+                <select id="filter-month" style="padding: 8px;">
+                    <option value="">Todos os Meses</option>
+                    <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option><option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option><option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+                </select>
+                <input type="number" id="filter-year" placeholder="Ano (ex: 2025)" style="width: 100px; padding: 8px;">
+                <button type="button" id="btn-aplicar-filtros">🔍 Filtrar</button>
+                <button type="button" id="btn-exportar-excel" style="margin-left: auto; background-color: #1d6f42;">⬇️ Exportar para Excel</button>
+            </div>
+            
+            <table class="audit-table" id="tabela-gestao-auditorias">
+                <thead>
+                    <tr>
+                        <th>ID do Relatório</th><th>Oficina Auditada</th><th>Local</th><th>Data de Auditoria</th><th>Data do Relatório</th><th>Estado</th><th>Estado do PA</th><th>Auditor(es)</th><th style="width: 15%;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+    <div id="dashboard-container" class="main-content hidden">
+    <div class="container">
+        <div class="header-with-logo">
+            <img src="Amatoscar.png" alt="Logótipo da Empresa" class="company-logo">
+            <h1>Dashboard de Auditorias</h1>
+        </div>
+
+        <div class="dashboard-actions">
+            <button type="button" onclick="voltarAoMenuPrincipal()">↩️ Voltar ao Menu Principal</button>
+            <button type="button" onclick="gerarPDFDashboard()" style="background-color: #5a6268; margin-left: 10px;">🖨️ Gerar Relatório PDF</button>
+        </div>
+        <div class="dashboard-cards">
+            <div class="dashboard-card" id="card-total-container">
+                <h4>Total de Oficinas Auditadas</h4>
+                <p class="dashboard-card-value" id="card-total-auditorias">0</p>
+            </div>
+    <div class="dashboard-card" id="card-media-mes-container">
+        <h4>Média Oficinas Auditadas / Mês</h4>
+        <p class="dashboard-card-value" id="card-media-auditorias-mes">0</p>
+    </div>
+    <div class="dashboard-card" id="card-pontuacao-media-container">
+        <h4>Pontuação Média Geral</h4>
+        <p class="dashboard-card-value" id="card-pontuacao-media">0%</p>
+    </div>
+
+    <div class="dashboard-card">
+        <h4>Tempo Médio Resposta PA</h4>
+        <p class="dashboard-card-value" id="card-tempo-medio-resposta">-- dias</p>
+    </div>
+
+    <div class="dashboard-card" style="grid-column: span 2;"> <h4>Estado dos Planos de Ação</h4>
+        <ul id="card-estado-pa-lista" class="pa-status-list">
+            </ul>
+    </div>
+</div>
+            </div>
+            <div class="dashboard-charts">
+                <div class="chart-container"><h4>Auditorias por Local</h4><canvas id="grafico-por-local"></canvas></div>
+                <div class="chart-container"><h4>Pontuação Média Mensal</h4><canvas id="grafico-pontuacao-mensal"></canvas></div>
+                <div class="chart-container"><h4>Auditorias por Mês</h4><table class="audit-table" id="tabela-auditorias-mes"><thead><tr><th>Mês/Ano</th><th>Nº de Auditorias</th></tr></thead><tbody></tbody></table></div>
+                <div class="chart-container"><h4>Ranking de Oficinas (Última Auditoria)</h4><table class="audit-table" id="tabela-ranking-oficinas"><thead><tr><th>Pos.</th><th>Oficina</th><th>Pontuação Final</th></tr></thead><tbody></tbody></table></div>
+                   <div class="chart-container">
+        <h4>Top 5 Penalizações (por Artigo)</h4>
+        <table class="audit-table" id="tabela-top-penalizacoes">
+            <thead>
+                <tr>
+                    <th>Artigo</th>
+                    <th>Descrição</th>
+                    <th>Nº de Vezes Aplicada</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
+
+    <div class="chart-container">
+        <h4>Valores Penalizados (por Oficina/Mês)</h4>
+        <table class="audit-table" id="tabela-valores-penalizados">
+            <thead>
+                <tr>
+                    <th>Oficina</th>
+                    <th>Mês/Ano</th>
+                    <th>Valor Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
+            </div>
+           <div class="summary-box" style="margin-top: 30px;">
+                <h3>Resumo dos KPIs de Planeamento</h3>
+                <p style="font-size: 14px; font-style: italic;">Valores médios gerais calculados a partir da última importação de dados.</p>
+                <table class="audit-table" id="tabela-resumo-kpis">
+                    <thead>
+                        <tr>
+                            <th>Indicador (KPI)</th>
+                            <th>Média Geral</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+            </div>
+    </div>
+</div>
+<div id="edicao-criterios-container" class="main-content hidden">
+    <div class="container">
+        <div class="header-with-logo">
+            <img src="Amatoscar.png" alt="Logótipo da Empresa" class="company-logo">
+            <h1>Redefinição de Critérios da Avaliação da Concessão</h1>
+        </div>
+        <button type="button" onclick="voltarParaConsola()">↩️ Voltar à Consola</button>
+
+        <div id="editor-criterios-content" style="margin-top: 20px;">
+            <table class="audit-table" id="tabela-edicao-criterios">
+                <thead>
+                    <tr>
+                        <th>Critério de Avaliação</th>
+                        <th>Peso (%)</th>
+                        <th style="width: 15%;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+            <button type="button" onclick="adicionarCriterioPrincipal()" style="margin-top: 10px;">Adicionar Novo Critério Principal</button>
+        </div>
+
+        <div class="form-actions" style="margin-top: 20px; display: flex; justify-content: flex-end; align-items: center; gap: 20px;">
+            <div id="total-pesos-display" style="font-weight: bold; font-size: 1.2em;">
+                Soma dos Pesos: <span id="soma-pesos-valor">0</span> / 100
+            </div>
+            <button type="button" id="btn-gravar-criterios" onclick="gravarCriteriosAvaliacao()" style="background-color: #28a745;">✅ 
+                Gravar Novas Regras
+            </button>
+        </div>
+    </div>
+</div>
+    <div id="portal-resposta-container" class="main-content hidden">
+        <div class="container">
+            <div class="header-with-logo">
+                <img src="Amatoscar.png" alt="Logótipo da Empresa" class="company-logo">
+                <h1>Resposta ao Plano de Ação</h1>
+            </div>
+            <div id="portal-resposta-info">
+                <p><strong>ID do Relatório:</strong> <span id="resposta-id-relatorio">...</span></p>
+                <p><strong>Oficina:</strong> <span id="resposta-oficina">...</span></p>
+                <p><strong>Data da Auditoria:</strong> <span id="resposta-data-auditoria">...</span></p>
+            </div>
+            <hr>
+            <h4>Plano de Ação a Ser Respondido:</h4>
+            <div id="resposta-plano-acao-tabela"><p>A carregar plano de ação...</p></div>
+            <div class="form-actions" style="margin-top: 20px;">
+                <a id="resposta-link-sharepoint" href="#" target="_blank" class="button-link">1. Preencher Resposta no Excel (SharePoint)</a>
+                <button type="button" id="btn-gravar-resposta-pa" onclick="gravarRespostaPA()" style="background-color: #28a745;">✅ Gravar e Submeter Respostas</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="portal-avaliacao-container" class="main-content hidden">
+        <div class="container">
+            <div class="header-with-logo">
+                <img src="Amatoscar.png" alt="Logótipo da Empresa" class="company-logo">
+                <h1>Avaliação da Resposta ao Plano de Ação</h1>
+            </div>
+            <div id="portal-avaliacao-info">
+                <p><strong>ID do Relatório:</strong> <span id="avaliacao-id-relatorio">...</span></p>
+                <p><strong>Oficina:</strong> <span id="avaliacao-oficina">...</span></p>
+            </div>
+            <hr>
+            <h4>Plano de Ação e Respostas para Avaliação:</h4>
+            <div id="avaliacao-plano-acao-tabela"><p>A carregar plano de ação e respostas...</p></div>
+            <div class="form-actions" style="margin-top: 20px;">
+                <button type="button" id="btn-gravar-avaliacao-pa" onclick="gravarAvaliacaoPA()" style="background-color: #28a745;">✅ Gravar e Fechar Acompanhamento</button>
+                <button type="button" class="btn-cancel" onclick="voltarParaConsola()">↩️ Voltar para a Consola</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="main-content" class="main-content hidden">
+        <div class="container">
+            <form id="auditoria-form">
+                <input type="hidden" id="current_audit_id" value="">
+                <div class="header-with-logo">
+                    <img src="Amatoscar.png" alt="Logótipo da Empresa" class="company-logo">
+                    <h1>Relatório de Auditoria Interna</h1>
+                </div>
+    
+                <div class="tab">
+                    <button type="button" class="tablinks" onclick="openTab(event, 'Capa_Informacoes_Gerais')" id="defaultOpen">Info. gerais e dados iniciais</button>
+                    <button type="button" class="tablinks" onclick="openTab(event, 'Criterios_Auditoria')">Critérios de Auditoria</button> 
+                    <button type="button" class="tablinks" onclick="openTab(event, 'Aspeto_Visual_Imagem')">Aspeto Visual e Imagem</button>
+                    <button type="button" class="tablinks" onclick="openTab(event, 'Seguranca_Ambiente')">Segurança e Ambiente</button>
+                    <button type="button" class="tablinks" onclick="openTab(event, 'Armazem')">Armazém</button>
+                    <button type="button" class="tablinks" onclick="openTab(event, 'Oficina')">Oficina</button>
+                    <button type="button" class="tablinks" onclick="openTab(event, 'Garantias')">Garantias</button>
+                    <button type="button" class="tablinks" onclick="openTab(event, 'Anexos_Diversos')">Anexos Diversos</button>
+                    <button type="button" class="tablinks" onclick="openTab(event, 'Consideracoes_Gerais')">Considerações Gerais</button>
+                    <button type="button" class="tablinks" onclick="openTab(event, 'Plano_Acao')">Plano de Ação</button>
+                    <button type="button" class="tablinks" onclick="openTab(event, 'Avaliacao_Concessao')">Avaliação da Concessão</button>
+                    <button type="button" class="tablinks" onclick="openTab(event, 'Penalizacoes')">Penalizações</button>
+                </div>
+
+        <!-- Tab Content -->
+        <div id="Capa_Informacoes_Gerais" class="tabcontent">
+    <h2>Capa e Informações Gerais</h2>
+    <div class="collision-warning"></div>
+    <section>
+        <label for="locais_auditar">Local a Auditar:</label>
+        <input type="text" id="locais_auditar" name="locais_auditar" list="sugestoes_locais_auditar" placeholder="Ex: EVR 1">
+        <datalist id="sugestoes_locais_auditar"></datalist>
+        <br>
+
+        <label for="data_auditoria">Data da Auditoria:</label>
+        <input type="date" id="data_auditoria" name="data_auditoria">
+        <br>
+
+        <label for="oficinas_auditadas">Oficina(s) Auditada(s):</label>
+<select id="oficinas_auditadas" name="oficinas_auditadas" multiple size="5" oninput="guardarEstadoFormulario(event)">
+    </select>
+<br>
+
+        <label for="marca_logo_select">Logótipo da Marca a usar no Cabeçalho:</label>
+        <select id="marca_logo_select" name="marca_logo_select" multiple size="6">
+            <option value="">-- Sem Logo --</option>
+            <option value="Audi">Audi</option>
+            <option value="BMW">BMW</option>
+            <option value="BYD">BYD</option>
+            <option value="Citroën">Citroën</option>
+            <option value="Chevrolet">Chevrolet</option>
+            <option value="Fiat">Fiat</option>
+            <option value="Hyundai">Hyundai</option>
+            <option value="Isuzu">Isuzu</option>
+            <option value="Kia">Kia</option>
+            <option value="Mini">Mini</option>
+            <option value="Motorrad">Motorrad</option>
+            <option value="Nissan">Nissan</option>
+            <option value="Opel">Opel</option>
+            <option value="Peugeot">Peugeot</option>
+            <option value="Skoda">Skoda</option>
+            <option value="Seat">SEAT</option>
+            <option value="Toyota">Toyota</option>
+            <option value="Volvo">Volvo</option>
+            <option value="VW">VW</option>
+        </select>
+        <br>
+
+        <label for="auditor">Auditor(es):</label>
+<select id="auditor" name="auditores" multiple size="5" oninput="guardarEstadoFormulario(event)">
+    <option value="José Carlos Tavares">José Carlos Tavares</option>
+    <option value="Francisco Andrade">Francisco Andrade</option>
+    <option value="André Crespo">André Crespo</option>
+    <option value="João Alegria">João Alegria</option>
+    <option value="João Roque">João Roque</option>
+    <option value="Sílvia Nina">Sílvia Nina</option>
+</select>
+<br>
+        <label for="id_visita">ID do Relatório / Visita:</label>
+        <input type="text" id="id_visita" name="id_visita" readonly>
+        <br>
+    </section> </div> 
+<div id="Criterios_Auditoria" class="tabcontent">
+    <h2>Unidades a Auditar - Critérios de Seleção</h2>
+    <div class="collision-warning"></div>
+    <div id="placeholder-criterios" style="text-align: center; margin-top: 30px; padding: 20px;">
+        <p style="font-size: 14px; color: #666;">Clique para obter a última versão do ranking guardada na base de dados.</p>
+        <button type="button" class="btn-primary" onclick="carregarCriteriosNaAuditoria()">
+            Carregar Último Ranking da BD
+        </button>
+    </div>
+    <section>
+        <p style="font-style: italic; color: #555;">
+            Anexe uma imagem com a tabela de critérios. O texto abaixo servirá como observações adicionais no relatório. Se não anexar imagem, apenas o texto será considerado.
+        </p>
+        <br>
+        
+        <label for="imagem_criterios"><b>Anexar Imagem com Tabela de Critérios:</b></label>
+        <input type="file" id="imagem_criterios" name="imagem_criterios" accept="image/*" onchange="gerirUploadDeImagem(event);">
+        <div id="preview_imagem_criterios" class="image-preview-container"></div>
+        <br>
+        
+        <label for="criterios_texto_livre"><b>Observações Adicionais / Critérios (se não houver imagem):</b></label>
+        <textarea id="criterios_texto_livre" name="criterios_texto_livre" rows="10" 
+                  placeholder="Descreva aqui os critérios caso não anexe uma imagem, ou adicione observações..."></textarea>
+    </section>
+</div>
+        <div id="Aspeto_Visual_Imagem" class="tabcontent">
+            <h2>Aspeto Visual e Imagem</h2>
+            <div class="collision-warning"></div>
+            <section>
+                <table class="audit-table">
+                    <thead>
+                        <tr>
+                            <th>Aspeto</th>
+                            <th>Conformidade</th>
+                            <th>Observações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Aspecto geral e limpeza das instalações (todas as zonas)</td>
+                            <td>
+                                <select name="aspeto_geral_limpeza">
+                                    <option value="">Selecione...</option>
+                                    <option value="OK" selected>OK</option>
+                                    <option value="NOK">NOK</option>
+                                    <option value="N/A">N/A</option>
+                                </select>
+                            </td>
+                            <td><textarea name="obs_aspeto_geral_limpeza" rows="2"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td>Informações ao cliente (incluindo requisitos legais), aspeto e bem-estar (zonas de espera)</td>
+                            <td>
+                                <select name="informacoes_cliente">
+                                    <option value="">Selecione...</option>
+                                    <option value="OK" selected>OK</option>
+                                    <option value="NOK">NOK</option>
+                                    <option value="N/A">N/A</option>
+                                </select>
+                            </td>
+                            <td><textarea name="obs_informacoes_cliente" rows="2"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td>Separação de resíduos (todas as zonas)</td>
+                            <td>
+                                <select name="separacao_residuos">
+                                    <option value="">Selecione...</option>
+                                    <option value="OK" selected>OK</option>
+                                    <option value="NOK">NOK</option>
+                                    <option value="N/A">N/A</option>
+                                </select>
+                            </td>
+                            <td><textarea name="obs_separacao_residuos" rows="2"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td>Aspeto geral receção/fardamento, organização e limpeza; nomes do cliente á vista (RGPD)</td>
+                            <td>
+                                <select name="aspeto_rececao_fardamento">
+                                    <option value="">Selecione...</option>
+                                    <option value="OK" selected>OK</option>
+                                    <option value="NOK">NOK</option>
+                                    <option value="N/A">N/A</option>
+                                </select>
+                            </td>
+                            <td><textarea name="obs_aspeto_rececao_fardamento" rows="2"></textarea></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <br>
+                <label for="aspeto_visual_comentarios">Comentários Adicionais:</label><br>
+                <textarea id="aspeto_visual_comentarios" name="aspeto_visual_comentarios" rows="4"></textarea><br><br>
+
+                <label for="fotos_aspeto_visual">Anexar Fotos:</label>
+                <input type="file" id="fotos_aspeto_visual" name="fotos_aspeto_visual" accept="image/*" multiple onchange="gerirUploadDeImagem(event);">
+                <div id="preview_fotos_aspeto_visual" class="image-preview-container"></div>
+            </section>
+        </div>
+
+        <div id="Seguranca_Ambiente" class="tabcontent">
+            <h2>Segurança e Ambiente</h2>
+            <div class="collision-warning"></div>
+            <section>
+                <table class="audit-table">
+                    <thead>
+                        <tr>
+                            <th>Aspeto</th>
+                            <th>Conformidade</th>
+                            <th>Observações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Conformidade na colocação de meio de combate a incêndio e sinalética</td>
+                            <td>
+                                <select name="combate_incendio_sinaletica">
+                                    <option value="">Selecione...</option>
+                                    <option value="OK" selected>OK</option>
+                                    <option value="NOK">NOK</option>
+                                    <option value="N/A">N/A</option>
+                                </select>
+                            </td>
+                            <td><textarea name="obs_combate_incendio_sinaletica" rows="2"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td>Acondicionamento não conforme de resíduos</td>
+                            <td>
+                                <select name="acondicionamento_residuos">
+                                    <option value="">Selecione...</option>
+                                    <option value="OK" selected>OK</option>
+                                    <option value="NOK">NOK</option>
+                                    <option value="N/A">N/A</option>
+                                </select>
+                            </td>
+                            <td><textarea name="obs_acondicionamento_residuos" rows="2"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td>Não cumprimento das regras de segurança e primeiros socorros</td>
+                            <td>
+                                <select name="seguranca_primeiros_socorros">
+                                    <option value="">Selecione...</option>
+                                    <option value="OK" selected>OK</option>
+                                    <option value="NOK">NOK</option>
+                                    <option value="N/A">N/A</option>
+                                </select>
+                            </td>
+                            <td><textarea name="obs_seguranca_primeiros_socorros" rows="2"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td>Não cumprimento de manutenção e obrigações legais de equipamentos e instalações</td>
+                            <td>
+                                <select name="manutencao_equipamentos">
+                                    <option value="">Selecione...</option>
+                                    <option value="OK" selected>OK</option>
+                                    <option value="NOK">NOK</option>
+                                    <option value="N/A">N/A</option>
+                                </select>
+                            </td>
+                            <td><textarea name="obs_manutencao_equipamentos" rows="2"></textarea></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <br>
+                <label for="seguranca_ambiente_comentarios">Comentários Adicionais:</label><br>
+                <textarea id="seguranca_ambiente_comentarios" name="seguranca_ambiente_comentarios" rows="4"></textarea><br><br>
+
+                <label for="fotos_seguranca_ambiente">Anexar Fotos:</label>
+                <input type="file" id="fotos_seguranca_ambiente" name="fotos_seguranca_ambiente" accept="image/*" multiple onchange="gerirUploadDeImagem(event);">
+                <div id="preview_fotos_seguranca_ambiente" class="image-preview-container"></div>
+            </section>
+        </div>
+
+        <div id="Armazem" class="tabcontent">
+            <h2>Armazém / Peças</h2>
+            <div class="collision-warning"></div>
+            <section>
+                <h4>3.1 Stock de Peças</h4>
+    
+    <label for="fotos_stock_pecas">Anexar Tabela:</label>
+    <input type="file" id="fotos_stock_pecas" name="fotos_stock_pecas" accept="image/*" onchange="gerirUploadDeImagem(event);">
+    <div id="preview_fotos_stock_pecas" class="image-preview-container"></div>
+    <br>
+    <br> <label for="link_stock_pecas">Link do SharePoint para o Ficheiro de Stock de Peças (um por linha):</label>
+        <textarea id="link_stock_pecas" name="link_stock_pecas" rows="3" placeholder="Cole aqui os links..." style="width: 100%; margin-bottom: 10px;"></textarea>
+    <label for="comentarios_stock_pecas">Comentários:</label><br>
+    <textarea id="comentarios_stock_pecas" name="comentarios_stock_pecas" rows="4"></textarea>
+    <label for="fotos_gerais_stock_pecas">Anexar Fotos Gerais (Ex: estado do armazém):</label>
+<input type="file" id="fotos_gerais_stock_pecas" name="fotos_gerais_stock_pecas" accept="image/*" multiple onchange="gerirUploadDeImagem(event);">
+<div id="preview_fotos_gerais_stock_pecas" class="image-preview-container"></div>
+            </section>
+            <section>
+                <h3>3.2 Stock de Óleos e Ad Blue</h3>
+
+<label for="link_stock_oleos">Link do SharePoint para o Ficheiro de Stock de Óleos (um por linha):</label>
+<textarea id="link_stock_oleos" name="link_stock_oleos" rows="3" placeholder="Cole aqui os links..." style="width: 100%; margin-bottom: 10px;"></textarea>
+
+<label for="importFileStockOleos">Importar Ficheiro do PC para Processar Dados:</label>
+<input type="file" id="importFileStockOleos" accept=".xls,.xlsx" onchange="importarXlsStockOleos(event); handleFileUpload(event);">
+<span id="filename_stock_oleos_display">Nenhum ficheiro selecionado.</span>
+                <div id="stock_oleos_summary" class="summary-box" style="display: none;">
+                    <h4>Resumo do Inventário de Óleos</h4>
+                    <p><span id="oleos_summary_text"></span></p>
+                </div>
+                <br>
+                <label for="comentarios_stock_oleos">Comentários:</label><br>
+                <textarea id="comentarios_stock_oleos" name="comentarios_stock_oleos" rows="4"></textarea><br><br>
+            </section>
+            <section>
+                <h3>3.3 Caixas de Peças</h3>
+<label for="caixas_pecas_comentarios">Comentários:</label><br>
+<textarea id="caixas_pecas_comentarios" name="caixas_pecas_comentarios" rows="4"></textarea><br><br>
+
+<label for="link_caixas_pecas">Link do SharePoint para os Documentos Digitalizados (um por linha):</label>
+<textarea id="link_caixas_pecas" name="link_caixas_pecas" rows="3" placeholder="Cole aqui os links..." style="width: 100%; margin-bottom: 10px;"></textarea>
+<br><br>
+<label for="fotos_caixas_pecas">Anexar Fotos de Situações Diversas:</label>
+<input type="file" id="fotos_caixas_pecas" name="fotos_caixas_pecas" accept="image/*" multiple onchange="gerirUploadDeImagem(event);">
+<div id="preview_fotos_caixas_pecas" class="image-preview-container"></div>            
+</section>
+        </div>
+
+        <div id="Oficina" class="tabcontent">
+            <h2>Oficina</h2>
+            <div class="collision-warning"></div>
+            <section>
+                <h3>4.1 Ordens de Reparação em Aberto</h3>
+                <h4>4.1.1. Verificação de Proteções nas Viaturas</h4>
+                <label for="resumo_protecoes_data">Data:</label>
+                <input type="date" id="resumo_protecoes_data" name="resumo_protecoes_data"><br>
+                <label for="resumo_protecoes_centro">Centro:</label>
+                <input type="text" id="resumo_protecoes_centro" name="resumo_protecoes_centro" readonly><br><br>
+                <table id="verificacao_protecoes_table" class="audit-table">
+                    <thead>
+                        <tr>
+                            <th>Matrícula</th>
+                            <th>Marca</th>
+                            <th>Modelo</th>
+                            <th>Volante</th>
+                            <th>Banco</th>
+                            <th>Tapete</th>
+                            <th>Travão Mão</th>
+                            <th>Mudanças</th>
+                            <th>Conclusão</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be added by JavaScript -->
+                    </tbody>
+                </table>
+                <button type="button" onclick="adicionarLinhaProtecaoViatura()">Adicionar Viatura</button>
+                <br><br>
+                <h4>Resumo Geral da Verificação de Proteções</h4>
+                <table id="resumo_protecoes_summary_table" class="audit-table">
+                    <thead>
+                        <tr>
+                            <th>Nº viaturas auditadas</th>
+                            <th>% viaturas OK</th>
+                            <th>% viaturas NOK</th>
+                            <th>% Itens OK</th>
+                            <th>% Itens NOK</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Summary row will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </section>
+            <section>
+                <h4>4.1.2. Verificação de Tempos – OR’s em Curso</h4>
+                <h5>Resumo da Verificação de Tempos</h5>
+                <table id="verificacao_tempos_summary_table" class="audit-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Nº Viaturas</th>
+                            <th>% OK</th>
+                            <th>% NOK</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Summary row populated by JS -->
+                    </tbody>
+                </table>
+                <br>
+                <h5>Detalhes da Verificação de Tempos</h5>
+                <table id="verificacao_tempos_details_table" class="audit-table">
+                    <thead>
+                        <tr>
+                            <th>Oficina</th>
+                            <th>Matrícula</th>
+                            <th>Técnico</th>
+                            <th>Rececionista</th>
+                            <th>Estado</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Detail rows added by JS -->
+                    </tbody>
+                </table>
+                <button type="button" onclick="adicionarLinhaVerificacaoTemposDetails()">Adicionar Viatura</button>
+            </section>
+            <section>
+                <h4>4.1.3. Ordens de Reparação em Curso</h4>
+                <p>Sem contar com as OR’s de garantias, encontravam-se em aberto no primeiro dia do mês, OR’s totalizando os seguintes valores:</p>
+                <table id="ordens_reparacao_curso_table" class="audit-table">
+                    <thead>
+                        <tr>
+                            <th>Nº linhas de trabalhos</th>
+                            <th>Valor em curso</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" id="total_num_ors_curso" name="total_num_ors_curso" readonly></td>
+                            <td><input type="text" id="total_valor_ors_curso" name="total_valor_ors_curso" readonly></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <br><br>
+                <label for="ordens_reparacao_em_curso_comentarios">Comentários Adicionais:</label><br>
+                <textarea id="ordens_reparacao_em_curso_comentarios" name="ordens_reparacao_em_curso_comentarios" rows="4"></textarea><br><br>
+                
+<label for="link_ors_em_curso">Link do SharePoint para o Ficheiro de ORs em Curso:</label>
+<textarea id="link_ors_em_curso" name="link_ors_em_curso" rows="3" placeholder="Cole aqui os links... (um por linha)" style="width: 100%; margin-bottom: 10px;"></textarea>
+
+<label for="anexo_ors_em_curso">Importar Ficheiro do PC para Processar Dados:</label>
+<input type="file" id="anexo_ors_em_curso" accept=".xls,.xlsx" onchange="processarORsEmCurso(event); handleFileUpload(event);">
+<span id="filename_anexo_ors_em_curso_display">Nenhum ficheiro selecionado.</span>
+            </section>
+            <section>
+                <h3>4.2 Ordens de Reparação Fechadas</h3>
+<style>
+    /* Estilos para a funcionalidade de drag-and-drop */
+    #rentabilidade_imagem_preview .image-group {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+        cursor: grab;
+    }
+    #rentabilidade_imagem_preview .image-group.dragging {
+        opacity: 0.5;
+        border-style: dashed;
+    }
+    #rentabilidade_imagem_preview .image-group img {
+        max-width: 150px;
+        max-height: 100px;
+        margin-right: 15px;
+        border-radius: 3px;
+    }
+    #rentabilidade_imagem_preview .image-group .controls {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    #rentabilidade_imagem_preview .image-group .order-buttons button {
+        font-size: 18px;
+        line-height: 1;
+        padding: 2px 6px;
+        margin-left: 5px;
+    }
+</style>
+
+<h4>4.2.1 Rentabilidade</h4>
+<label for="rentabilidade_comentarios">Comentários:</label><br>
+<textarea id="rentabilidade_comentarios" name="rentabilidade_comentarios" rows="4"></textarea><br><br>
+
+<div id="vertentes-rentabilidade-container" style="margin-top: 15px; margin-bottom: 15px; border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
+    <label><b>Selecione as vertentes de negócio aplicáveis a esta avaliação:</b></label><br>
+    <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 5px;">
+        <label><input type="checkbox" name="vertente" value="of_mod_mecanica" checked> MOD Mecânica</label>
+        <label><input type="checkbox" name="vertente" value="of_mod_chapa"> MOD Chapa</label>
+        <label><input type="checkbox" name="vertente" value="of_mod_pintura"> MOD Pintura</label>
+        <label><input type="checkbox" name="vertente" value="of_pecas" checked> Peças</label>
+        <label><input type="checkbox" name="vertente" value="of_material_pintura"> Material de Pintura</label>
+        <label><input type="checkbox" name="vertente" value="of_servicos_externos"> Serviços Externos</label>
+    </div>
+</div>
+
+<label for="link_rentabilidade_excel">Link do SharePoint para o Ficheiro Excel Original:</label>
+<textarea id="link_rentabilidade_excel" name="link_rentabilidade_excel" rows="3" placeholder="Cole aqui os links... (um por linha)" style="width: 100%; margin-bottom: 10px;"></textarea>
+
+<label for="rentabilidade_imagem_upload">Anexar Imagens da Tabela para o PDF:</label>
+<input type="file" id="rentabilidade_imagem_upload" name="rentabilidade_imagem_upload" accept="image/png, image/jpeg" onchange="gerirUploadDeImagem(event)" multiple>
+<div id="rentabilidade_imagem_preview" style="margin-top: 15px; border: 1px dashed #ccc; padding: 10px; min-height: 50px;">
+    <p style="color: #888; font-style: italic;">Arraste as imagens para reordenar.</p>
+</div>
+            </section>
+            <section>
+                <h4>4.2.2 Controlo processual de OR´s fechadas</h4>
+                <table class="audit-table" id="controlo_ors_fechadas_table">
+                    <thead>
+                        <tr>
+                            <th>Nº OR´s solicitadas</th>
+                            <th>Nº OR´s OK</th>
+                            <th>Nº OR´s NOK</th>
+                            <th>Nº OR´s não apresentadas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="number" name="ors_solicitadas"></td>
+                            <td><input type="number" name="ors_ok"></td>
+                            <td><input type="number" name="ors_nok"></td>
+                            <td><input type="number" name="ors_nao_apresentadas"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <label for="controlo_ors_fechadas_comentarios">Comentários:</label><br>
+                <textarea id="controlo_ors_fechadas_comentarios" name="controlo_ors_fechadas_comentarios" rows="4"></textarea><br><br>
+<label for="link_controlo_ors_fechadas">Link do SharePoint para o Ficheiro:</label>
+<textarea id="link_controlo_ors_fechadas" name="link_controlo_ors_fechadas" rows="3" placeholder="Cole aqui os links...(um por linha)" style="width: 100%; margin-bottom: 10px;"></textarea>
+<label for="anexo_controlo_ors_fechadas">Importar Ficheiro do PC para Processar Dados:</label>
+<input type="file" id="anexo_controlo_ors_fechadas" accept=".xls,.xlsx">
+<span id="filename_anexo_controlo_ors_fechadas_display">Nenhum ficheiro selecionado.</span>
+
+            </section>
+
+            <section>
+                <h4>4.2.3 Debitos em clientes internos</h4>
+                <table class="audit-table" id="debitos_internos_table">
+                    <thead>
+                        <tr>
+                            <th>Nº de débitos solicitados</th>
+                            <th>Período</th>
+                            <th>Nº de débitos disponibilizados</th>
+                            <th>Nº de débitos OK (cumprem requisitos)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="number" name="debitos_solicitados"></td>
+                            <td><input type="text" name="periodo_debitos"></td>
+                            <td><input type="number" name="debitos_disponibilizados"></td>
+                            <td><input type="number" name="debitos_ok_requisitos"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <label for="debitos_internos_comentarios">Comentários:</label><br>
+                <textarea id="debitos_internos_comentarios" name="debitos_internos_comentarios" rows="4"></textarea><br><br>
+<label for="link_debitos_internos">Link do SharePoint para o Ficheiro:</label>
+<textarea id="link_debitos_internos" name="link_debitos_internos" rows="3" placeholder="Cole aqui os links...(um por linha)" style="width: 100%; margin-bottom: 10px;"></textarea>
+
+<label for="anexo_debitos_internos">Anexar Ficheiro de Referência (Opcional):</label>
+<input type="file" id="anexo_debitos_internos" accept=".xls,.xlsx,.pdf" onchange="handleFileUpload(event)">
+<span id="filename_anexo_debitos_internos_display">Nenhum ficheiro selecionado.</span>
+            </section>
+            <section>
+                <h4>4.2.4 Notas de crédito devidamente assinadas</h4>
+                <table class="audit-table" id="notas_credito_table">
+                    <thead>
+                        <tr>
+                            <th>Nº de NC´s solicitadas</th>
+                            <th>Período</th>
+                            <th>Nº de NC´s disponibilizadas</th>
+                            <th>Nº de NC´s OK (cumprem requisitos)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="number" name="nc_solicitadas"></td>
+                            <td><input type="text" name="periodo_nc"></td>
+                            <td><input type="number" name="nc_disponibilizadas"></td>
+                            <td><input type="number" name="nc_ok_requisitos"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <label for="notas_credito_comentarios">Comentários:</label><br>
+                <textarea id="notas_credito_comentarios" name="notas_credito_comentarios" rows="4"></textarea><br><br>
+                
+
+<label for="link_notas_credito">Link do SharePoint para o Ficheiro:</label>
+<textarea id="link_notas_credito" name="link_notas_credito" rows="3" placeholder="Cole aqui os links...(um por linha)" style="width: 100%; margin-bottom: 10px;"></textarea>
+
+<label for="anexo_notas_credito">Anexar Ficheiro de Referência (Opcional):</label>
+<input type="file" id="anexo_notas_credito" accept=".xls,.xlsx,.pdf" onchange="handleFileUpload(event)">
+<span id="filename_anexo_notas_credito_display">Nenhum ficheiro selecionado.</span>
+            </section>
+            <section>
+               
+<h4>4.2.5 Verificação de Viatura pronta para entrega</h4>
+
+<div id="viaturas_prontas_container">
+    </div>
+
+<button type="button" onclick="adicionarViaturaPronta()">Adicionar Viatura</button>
+<br><br>
+
+<label for="observacoes_verificacao_entrega">Observações Adicionais (Gerais):</label><br>
+<textarea id="observacoes_verificacao_entrega" name="observacoes_verificacao_entrega" rows="4"></textarea><br><br>
+
+<label for="fotos_verificacao_entrega">Anexar Fotos (Gerais):</label>
+<input type="file" id="fotos_verificacao_entrega" name="fotos_verificacao_entrega" accept="image/*" multiple onchange="gerirUploadDeImagem(event);">
+<div id="preview_fotos_verificacao_entrega" class="image-preview-container"></div>
+            </section>
+            </section>
+            <section>
+                
+                <h3>4.3 Caixas de oficina</h3>
+<label for="comentarios_caixas_oficina">Comentários:</label><br>
+<textarea id="comentarios_caixas_oficina" name="comentarios_caixas_oficina" rows="4"></textarea><br><br>
+
+<label for="link_caixas_oficina">Link do SharePoint para o Documento:</label>
+<textarea id="link_caixas_oficina" name="link_caixas_oficina" rows="3" placeholder="Cole aqui os links... (um por linha)" style="width: 100%; margin-bottom: 10px;"></textarea>
+<br><br>
+<label for="fotos_caixas_oficina">Anexar Fotos de Situações Diversas:</label>
+<input type="file" id="fotos_caixas_oficina" name="fotos_caixas_oficina" accept="image/*" multiple onchange="gerirUploadDeImagem(event);">
+<div id="preview_fotos_caixas_oficina" class="image-preview-container"></div>            
+</section>
+            
+<section>
+<h3>4.4 Documentos por validar no GAP - Gestão documental</h3>
+
+<label for="link_documentos_validar">Link do SharePoint para o Ficheiro:</label>
+<input type="text" id="link_documentos_validar" name="link_documentos_validar" placeholder="Cole aqui o link do SharePoint" style="width: 100%; margin-bottom: 10px;">
+
+<label for="anexo_documentos_validar">Importar Ficheiro do PC para Processar Dados:</label>
+<input type="file" id="anexo_documentos_validar" accept=".xls,.xlsx" onchange="processarDocsGAP(event);">
+<span id="filename_anexo_documentos_validar_display">Nenhum ficheiro selecionado.</span>
+                <br><br>
+                <div class="table-container">
+                    <table class="audit-table" id="docs_gap_table">
+                        <thead>
+                            <tr>
+                                <th>Utilizador</th>
+                                <th>-30 dias</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="docs_gap_table_body">
+                        </tbody>
+                    </table>
+                </div>
+                <br>
+                <label for="comentarios_documentos_validar">Comentários:</label><br>
+                <textarea id="comentarios_documentos_validar" name="comentarios_documentos_validar" rows="4"></textarea><br><br>
+            </section>
+            <section>
+                <h3>4.5 Faturas a pronto pagamento</h3>
+                <h4>4.5.1 Faturas por liquidar</h4>
+<label for="comentarios_por_liquidar">Comentários:</label><br>
+<textarea id="comentarios_por_liquidar" name="comentarios_por_liquidar" rows="4"></textarea><br><br>
+<div style="display: flex; align-items: center; margin-bottom: 15px;">
+    <input type="checkbox" id="sem_faturas_por_liquidar" name="sem_faturas_por_liquidar" style="width: auto; margin-right: 10px;">
+    <label for="sem_faturas_por_liquidar" style="margin-bottom: 0;">Sem faturas por liquidar</label>
+</div>
+
+<div id="container_link_por_liquidar">
+    <label for="link_por_liquidar">Link do SharePoint para o Ficheiro:</label>
+    <textarea id="link_por_liquidar" name="link_por_liquidar" rows="3" placeholder="Cole aqui os links...(um por linha)" style="width: 100%; margin-bottom: 10px;"></textarea>
+</div>
+
+<div id="container_anexo_por_liquidar">
+    <label for="anexo_por_liquidar">Anexar Ficheiro de Referência (Opcional):</label>
+    <input type="file" id="anexo_por_liquidar" accept=".xls,.xlsx,.pdf" onchange="handleFileUpload(event)">
+    <span id="filename_anexo_por_liquidar_display">Nenhum ficheiro selecionado.</span>
+</div>
+            </section>
+            <section>
+                <h4>4.5.2 Faturas liquidadas com atraso na emissão de recibos</h4>
+<label for="comentarios_liquidado_atraso">Comentários:</label><br>
+<textarea id="comentarios_liquidado_atraso" name="comentarios_liquidado_atraso" rows="4"></textarea><br><br>
+<div style="display: flex; align-items: center; margin-bottom: 15px;">
+    <input type="checkbox" id="sem_atraso_liquidacao" name="sem_atraso_liquidacao" style="width: auto; margin-right: 10px;">
+    <label for="sem_atraso_liquidacao" style="margin-bottom: 0;">Sem documentos com atraso na liquidação do recibo</label>
+</div>
+
+<div id="container_link_liquidado_atraso">
+    <label for="link_liquidado_atraso">Link do SharePoint para o Ficheiro:</label>
+    <textarea id="link_liquidado_atraso" name="link_liquidado_atraso" rows="3" placeholder="Cole aqui os links...(um por linha)" style="width: 100%; margin-bottom: 10px;"></textarea>
+</div>
+
+<div id="container_anexo_liquidado_atraso">
+    <label for="anexo_liquidado_atraso">Anexar Ficheiro de Referência (Opcional):</label>
+    <input type="file" id="anexo_liquidado_atraso" accept=".xls,.xlsx,.pdf" onchange="handleFileUpload(event)">
+    <span id="filename_anexo_liquidado_atraso_display">Nenhum ficheiro selecionado.</span>
+</div>
+</section>
+ </section>
+
+<section>
+    <h4>4.6 Inventário de Ferramentas Especiais</h4>
+    <table class="audit-table" id="ferramentas_especiais_table">
+        <thead>
+            <tr>
+                <th>Referência da Ferramenta</th>
+                <th>Contagem Expectável (GAV)</th>
+                <th>Contagem Efetuada</th>
+                <th style="width: 10%;">Ações</th>
+            </tr>
+        </thead>
+        <tbody id="ferramentas_especiais_tbody">
+            </tbody>
+    </table>
+    <button type="button" onclick="adicionarLinhaFerramenta()">Adicionar Ferramenta</button>
+</section>  
+</div><div id="Garantias" class="tabcontent">
+    <h2>Garantias</h2>
+    <div class="collision-warning"></div>
+    <section>
+        <label for="link_anexo_garantias">Link do SharePoint para o Relatório de Garantias:</label>
+        <textarea id="link_anexo_garantias" name="link_anexo_garantias" rows="3" placeholder="Cole aqui os links...(um por linha)" style="width: 100%; margin-bottom: 10px;"></textarea>
+        <br><br>
+
+        <label for="garantias_comentarios">Comentários Adicionais:</label><br>
+        <textarea id="garantias_comentarios" name="garantias_comentarios" rows="4"></textarea><br><br>
+    </section>
+</div>
+
+        <div id="Anexos_Diversos" class="tabcontent">
+            <h2>Anexos Diversos</h2>
+            <div class="collision-warning"></div>
+            <section>
+                <label for="anexos_diversos_comentarios">Comentários:</label><br>
+                <textarea id="anexos_diversos_comentarios" name="anexos_diversos_comentarios" rows="4"></textarea><br><br>
+                
+                <label for="links_sharepoint_diversos">Links do SharePoint (um por linha):</label><br>
+                <textarea id="links_sharepoint_diversos" name="links_sharepoint_diversos" rows="4" placeholder="Cole aqui os links..."></textarea><br><br>
+
+                <label for="anexar_diversos_files">Anexar Ficheiros/Fotos Diversos:</label>
+                <input type="file" id="anexar_diversos_files" name="anexar_diversos_files" multiple onchange="gerirUploadDeImagem(event);">
+<div id="preview_anexar_diversos_files" class="image-preview-container"></div>
+            </section>
+        </div>
+
+        <div id="Consideracoes_Gerais" class="tabcontent">
+    <h2>Considerações Gerais</h2>
+    <div class="collision-warning"></div>
+    <section>
+        <label for="consideracoes_aspeto_visual">Aspeto Visual e Imagem:</label><br>
+        <textarea id="consideracoes_aspeto_visual" name="consideracoes_aspeto_visual" rows="4" oninput="atualizarPlanoDeAcao()"></textarea><br><br>
+
+        <label for="consideracoes_seguranca_ambiente">Segurança e Ambiente:</label><br>
+        <textarea id="consideracoes_seguranca_ambiente" name="consideracoes_seguranca_ambiente" rows="4" oninput="atualizarPlanoDeAcao()"></textarea><br><br>
+
+        <label for="consideracoes_armazem">Armazém:</label><br>
+        <textarea id="consideracoes_armazem" name="consideracoes_armazem" rows="4" oninput="atualizarPlanoDeAcao()"></textarea><br><br>
+
+        <label for="consideracoes_oficina">Oficina:</label><br>
+        <textarea id="consideracoes_oficina" name="consideracoes_oficina" rows="4" oninput="atualizarPlanoDeAcao()"></textarea><br><br>
+
+        <label for="consideracoes_garantias">Garantias:</label><br>
+        <textarea id="consideracoes_garantias" name="consideracoes_garantias" rows="4" oninput="atualizarPlanoDeAcao()"></textarea><br><br>
+    </section>
+</div>
+
+        <div id="Plano_Acao" class="tabcontent">
+    <h2>Plano de Ação</h2>
+    <div class="collision-warning"></div>
+    <section>
+        <p>De seguida são apresentadas as situações mais relevantes que carecem de ação urgente, e que assim permitirá melhorar o desempenho deste polo oficinal.</p>
+        <table class="audit-table" id="plano_acao_table">
+            <thead>
+                <tr>
+                    <th>Situação a corrigir</th>
+                    <th>Responsável pela ação</th>
+                    <th>Medida corretiva</th>
+                    <th>Data limite</th>
+                    <th>Acompanhamento</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+        <button type="button" onclick="adicionarLinhaPlanoAcao()">Adicionar Linha</button>
+    </section>
+    <button type="button" onclick="exportarPlanoAcaoParaExcel()">Exportar Plano de Ação para Excel</button>
+
+    <section>
+        <label for="link_acompanhamento_excel">Link para Resposta ao Plano de Acçao:</label>
+        <input type="text" id="link_acompanhamento_excel" name="link_acompanhamento_excel" placeholder="Cole aqui o link único para a resposta..." style="width: 100%; margin-bottom: 10px;">
+    </section>
+    <h2>Acompanhamento do Plano de Ação da Auditoria Anterior</h2>
+    <div class="collision-warning"></div>
+    <section>
+        <label for="observacoes_acompanhamento">Observações sobre o acompanhamento do plano de ação anterior:</label><br>
+        <textarea id="observacoes_acompanhamento" name="observacoes_acompanhamento" rows="4"></textarea><br><br>
+<button type="button" class="btn-penalizacao" onclick="abrirModalPenalizacoes('Acompanhamento do Plano de Ação Anterior')">
+    Aplicar Penalização
+</button>
+        <label for="import_acompanhamento_excel">Importar Ficheiro do PC para Processar Dados:</label>
+        <input type="file" id="import_acompanhamento_excel" accept=".xls,.xlsx" onchange="processarAcompanhamentoPlanoAnterior(event);">
+        <div id="acompanhamento_tabela_container"></div>
+    </section>
+</div>
+        </div>
+
+        <div id="Avaliacao_Concessao" class="tabcontent">
+            <h2>Avaliação da Concessão</h2>
+            <div class="collision-warning"></div>
+            <section>
+                <div style="margin-bottom: 20px; border: 1px dashed #ccc; padding: 10px;">
+            <label for="resultado_auditoria_anterior">Resultado da Auditoria Anterior (%):</label>
+            <input type="number" id="resultado_auditoria_anterior" name="resultado_auditoria_anterior" min="0" max="100" step="0.01" placeholder="Ex: 85.50">
+        </div>
+                <table class="audit-table" id="avaliacao_concessao_table">
+                    <thead>
+                        <tr>
+                            <th>Critério de Avaliação</th>
+                            <th>Peso (%)</th>
+                            <th>Conformidade / Valor</th>
+                            <th>Pontuação Obtida</th>
+                            <th>Observações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows populated by JavaScript based on avaliacaoConcessaoItems -->
+                    </tbody>
+                </table>
+                <div class="total-row-container">
+                    <span>TOTAL GERAL:</span>
+                    <input type="text" id="total_geral_avaliacao_concessao" name="total_geral_avaliacao_concessao" readonly>
+                </div>
+                <br>
+                <label for="comentarios_finais_avaliacao">Comentários Finais da Avaliação:</label><br>
+                <textarea id="comentarios_finais_avaliacao" name="comentarios_finais_avaliacao" rows="4"></textarea><br><br>
+            </section>
+        </div>
+
+        <div id="Penalizacoes" class="tabcontent">
+    <h2>Penalizações</h2>
+    <div class="collision-warning"></div>
+    <section>
+        <div id="resumo_penalizacoes_container" class="summary-box" style="margin-bottom: 20px;">
+    <h4>Resumo das Penalizações Aplicadas</h4>
+    <div id="resumo_penalizacoes_tabela">
+        <p>Nenhuma penalização aplicada até ao momento.</p>
+    </div>
+    <div id="container_confirmar_sem_penalizacoes" style="margin-top: 15px; padding: 10px; border: 1px dashed #ccc; border-radius: 5px;">
+    <label style="display: flex; align-items: center; font-weight: bold;">
+        <input type="checkbox" id="confirmar_sem_penalizacoes" name="confirmar_sem_penalizacoes" style="width: auto; margin-right: 10px;">
+        Confirmar ausência de penalizações para esta auditoria.
+    </label>
+</div>
+        <div style="text-align: right; font-size: 1.1em; font-weight: bold; margin-top: 10px;">
+        <span>Total: </span>
+        <span id="total-penalizacoes-valor">0,00 €</span>
+    </div>
+</div>
+        
+        <label for="penalizacoes_comentarios">Comentários sobre Penalizações (se aplicável):</label><br>
+        <textarea id="penalizacoes_comentarios" name="penalizacoes_comentarios" rows="4"></textarea><br><br>
+        <button type="button" onclick="exportarPenalizacoesAplicadasParaExcel()">Exportar Penalizações Aplicadas para Excel</button>
+    </section>
+</div>
+        
+        <div class="form-actions">
+            <button type="button" onclick="gerarPDF()">🖨️ Gerar PDF</button>
+            <button type="button" onclick="salvarAuditoriaNaCloud()">💾 Guardar na Nuvem</button>
+            <button type="button" id="btnApagarAuditoria" onclick="apagarAuditoriaAtual()" style="background-color: #dc3545;">🔴 Apagar Auditoria</button>
+            <button type="button" onclick="voltarAoMenuPrincipal()" class="btn-secondary">↩️ Voltar ao Menu</button>
+            <button type="button" onclick="fazerLogout()" class="btn-cancel">🔐 Sair</button>
+            </div>
+    </form> </div> <button onclick="voltarAoTopo()" id="btnVoltarTopo" title="Voltar ao topo">↑</button>
+    
+    <div id="manual-container" class="main-content hidden">
+        
+        <div class="container">
+            <div class="header-with-logo">
+                <img src="Amatoscar.png" alt="Logótipo da Empresa" class="company-logo">
+                <h1>Manual de Utilizador</h1>
+            </div>
+            <button type="button" onclick="voltarAoMenuPrincipal()">↩️ Voltar ao Menu Principal</button>
+        
+            <div id="manual-content" style="margin-top: 20px; text-align: left;">
+    <button type="button" onclick="exportarManualParaPDF()" style="background-color: #0275d8; margin-left: 10px;">🖨️ Exportar para PDF</button>
+<h2 style="color: #FF8C00;">📘 Manual de Utilizador — Plataforma de Auditoria Pós-Venda</h2>
+
+<h3 style="color: #FF8C00;">🟠 1. Acesso à Plataforma</h3>
+<ul>
+    <li>Introduza o seu email e palavra-passe de utilizador autorizado.</li>
+    <li>Clique em <strong>Entrar</strong>.</li>
+    <li>Se o login for válido, será redirecionado para o menu principal da aplicação.</li>
+</ul>
+
+<h3 style="color: #FF8C00;">🟢 2. Menu Principal</h3>
+<p>Após o login, o menu central oferece 4 vias de navegação principais:</p>
+<ul>
+    <li><strong>🆕 Iniciar Nova Auditoria:</strong> Cria um formulário de auditoria do zero, ideal para começar uma nova visita.</li>
+    <li><strong>☁️ Carregar Auditoria da Nuvem:</strong> Abre uma lista de auditorias guardadas que ainda não foram finalizadas, permitindo continuar um trabalho interrompido.</li>
+    <li><strong>⚙️ Gestão de Auditorias:</strong> Acede à consola, o centro de controlo para ver, gerir e analisar todas as auditorias.</li>
+    <li><strong>📖 Manual de Utilizador:</strong> Consulta esta documentação de ajuda.</li>
+</ul>
+
+<h3 style="color: #FF8C00;">📋 3. Consola de Gestão de Auditorias</h3>
+<p>A consola é o seu "quartel-general". Aqui pode:</p>
+<ul>
+    <li><strong>🔍 Pesquisar e Filtrar:</strong> Use a barra de pesquisa para encontrar auditorias por ID, local ou auditor, e os filtros de data para refinar a busca.</li>
+    <li><strong>⬇️ Exportar para Excel:</strong> Gera um ficheiro .CSV com os dados da lista de auditorias que está a visualizar.</li>
+    <li><strong>📊 Aceder ao Dashboard:</strong> Abre o painel de análise gráfica com métricas de performance globais.</li>
+    <li><strong>📅 Planear Novas Auditorias:</strong> Acede ao novo módulo de ranking de prioridades, baseado em KPIs, para ajudar a decidir quais as próximas oficinas a auditar.</li>
+    <li><strong>✏️ Editar Critérios de Avaliação:</strong> Permite alterar os pesos percentuais da secção "Avaliação da Concessão", que impacta a pontuação final de todas as auditorias.</li>
+</ul>
+<h4 style="color: #6f42c1; margin-top: 20px;">Detalhe do Planeamento (Ranking de Prioridades)</h4>
+<p style="text-align: left;">
+    Esta funcionalidade foi desenhada para o ajudar a decidir quais as próximas oficinas a auditar de forma objetiva, com base em dados. O "Score Final (Prioridade)" é calculado combinando três fatores com pesos diferentes:
+</p>
+<ul style="text-align: left;">
+    <li>
+        <strong>Ranking de KPIs (Peso: 30%):</strong> Este critério baseia-se no ficheiro Excel que importa. A aplicação calcula a média para cada um dos 5 KPIs (Margem de Peças, ORs em Curso, etc.) e depois mede o quão distante cada oficina está dessa média. Oficinas com um desvio negativo maior (pior performance) recebem uma pontuação de prioridade mais alta.
+    </li>
+    <li>
+        <strong>Data da Última Auditoria (Peso: 40%):</strong> A aplicação consulta automaticamente o seu próprio histórico de relatórios guardados. Quanto mais tempo tiver passado desde a última auditoria a uma oficina, maior será a sua prioridade. Oficinas que nunca foram auditadas recebem a prioridade máxima neste critério.
+    </li>
+    <li>
+        <strong>Classificação Média Histórica (Peso: 30%):</strong> Utilizando também o histórico, a aplicação calcula a média de todas as pontuações finais que uma oficina já obteve. Oficinas com uma média de classificação mais baixa recebem uma prioridade de auditoria mais elevada.
+    </li>
+</ul>
+<p style="text-align: left;">
+    O <strong>Score Final</strong> combina estes três fatores, dando um valor de prioridade a cada oficina. Quanto mais alto o score, maior a necessidade de uma nova auditoria.
+</p>
+<h3 style="color: #FF8C00;">📈 4. Dashboard</h3>
+<p>Mostra uma visão geral com os seguintes componentes:</p>
+<ul>
+    <li>Cartões de resumo: Total de auditorias, pontuação média geral, etc.</li>
+    <li>Gráficos interativos de auditorias por local e evolução mensal da pontuação.</li>
+    <li>Tabelas de dados agregados: ranking de oficinas, top penalizações, valores penalizados e resumo dos KPIs de planeamento.</li>
+    <li>Opção de gerar um relatório PDF consolidado de todo o dashboard.</li>
+</ul>
+
+<h3 style="color: #FF8C00;">🗂️ 5. Preenchimento da Auditoria</h3>
+<p>O formulário da auditoria está organizado por separadores temáticos. O sistema guarda automaticamente as suas alterações (autosave) alguns segundos após serem feitas.</p>
+<ul>
+    <li><strong>Funcionalidades Chave:</strong> Upload de imagens com pré-visualização, importação de dados de tabelas via Excel, e aplicação de penalizações de forma contextualizada.</li>
+    <li><strong>Considerações Gerais e Plano de Ação:</strong> Existe uma ligação direta entre estes dois separadores. Cada comentário que escrever nas "Considerações Gerais" de uma secção (ex: Armazém) cria automaticamente uma linha no "Plano de Ação", poupando-lhe tempo.</li>
+</ul>
+
+<h3 style="color: #FF8C00;">🔁 6. O Ciclo de Vida de uma Auditoria e do Plano de Ação (PA)</h3>
+<p>O processo de uma auditoria segue um ciclo de vida claro para garantir que todas as não conformidades são tratadas. O estado é visível na consola de gestão:</p>
+<ul>
+    <li><strong>Em Curso:</strong> Uma auditoria que está a ser preenchida pelo auditor.</li>
+    <li><strong>Finalizado:</strong> O auditor concluiu o preenchimento (100%) e gerou o PDF. O ciclo do PA é iniciado.</li>
+    <li><strong>Aguardando Resposta:</strong> Após a finalização, o GAV responsável tem 30 dias para responder ao Plano de Ação através de um link único.</li>
+    <li><strong>Respondido:</strong> O GAV submeteu as suas respostas e o auditor foi notificado.</li>
+    <li><strong>Acompanhamento com Pendentes:</strong> O auditor avaliou as respostas e concluiu que uma ou mais ações não foram implementadas corretamente.</li>
+    <li><strong>Acompanhamento Concluído:</strong> O auditor avaliou e considerou todas as ações como implementadas, fechando o ciclo para esta auditoria.</li>
+</ul>
+
+<h3 style="color: #FF8C00;">🔐 7. Logout</h3>
+<p>Para sair da sua sessão de forma segura, clique no ícone de "Sair" no canto inferior direito do formulário.</p>
+  <details class="manual-section" style="margin-top: 20px; border-top: 2px solid #6f42c1;">
+    <summary style="font-weight: bold; font-size: 1.1em; color: #6f42c1;">Apêndice Técnico: Requisitos de Importação de Ficheiros</summary>
+    <p style="text-align: left; font-style: italic;">Este apêndice serve como um guia de referência para a preparação de todos os ficheiros de importação utilizados na plataforma. Seguir estes requisitos é crucial para garantir a integridade e o processamento correto dos dados.</p>
+
+    <h5 style="color: #333; margin-top: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">1. Ficheiro de Planeamento de KPIs</h5>
+    <ul style="text-align: left; font-size: 14px;">
+        <li><strong>Funcionalidade:</strong> Utilizado na página "Planeamento de Auditoria" para calcular o ranking de prioridades.</li>
+        <li><strong>Formato do Ficheiro:</strong> Excel (.xlsx, .xls).</li>
+        <li><strong>Nome(s) da(s) Folha(s):</strong> O ficheiro deve conter <strong>5 folhas de cálculo</strong> com os seguintes nomes exatos:
+            <ul>
+                <li><code>Margem peças</code></li>
+                <li><code>ORs em curso</code></li>
+                <li><code>Eficiência de MO</code></li>
+                <li><code>Clientes internos</code></li>
+                <li><code>Garantias</code></li>
+            </ul>
+        </li>
+        <li><strong>Estrutura e Colunas (em cada folha):</strong>
+            <ul>
+                <li><strong>Coluna A:</strong> Nome da Oficina.</li>
+                <li><strong>Coluna B:</strong> Valor do KPI correspondente (deve ser um valor numérico).</li>
+            </ul>
+        </li>
+        <li><strong>Observações:</strong> A primeira linha de cada folha (cabeçalho) é automaticamente ignorada pela aplicação. Valores não numéricos na coluna B serão descartados.</li>
+    </ul>
+
+    <h5 style="color: #333; margin-top: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">2. Ficheiros da Secção "Armazém"</h5>
+    <ul style="text-align: left; font-size: 14px;">
+        <li><strong>Funcionalidade: 3.1 Stock de Peças</strong></li>
+        <li><strong>Nome da Folha:</strong> Deve chamar-se exatamente <code>Análise</code>.</li>
+        <li><strong>Estrutura:</strong> O sistema lê valores de <strong>células específicas</strong>. A estrutura deve ser rígida:
+            <ul>
+                <li><strong>Linha 4 (Referências):</strong> Células C4, D4, E4/F4, G4, I4.</li>
+                <li><strong>Linha 5 (Nº de Peças):</strong> Células C5 a I5.</li>
+                <li><strong>Linha 6 (Valor):</strong> Células C6 a I6.</li>
+                <li><strong>Linha 8 (Percentagens):</strong> Células D8, E8, G8.</li>
+            </ul>
+        </li>
+    </ul>
+    <ul style="text-align: left; font-size: 14px; margin-top: 10px;">
+        <li><strong>Funcionalidade: 3.2 Stock de Óleos e Ad Blue</strong></li>
+        <li><strong>Nome da Folha:</strong> Utiliza a <strong>primeira folha</strong> do ficheiro, o nome não importa.</li>
+        <li><strong>Estrutura:</strong> A primeira linha é tratada como cabeçalho. A tabela inteira é importada para o relatório PDF, pelo que deve estar formatada como desejado.</li>
+    </ul>
+
+    <h5 style="color: #333; margin-top: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">3. Ficheiros da Secção "Oficina"</h5>
+    <ul style="text-align: left; font-size: 14px;">
+        <li><strong>Funcionalidade: 4.1.3 Ordens de Reparação (ORs) em Curso</strong></li>
+        <li><strong>Nome da Folha:</strong> Deve chamar-se exatamente <code>Em curso</code>.</li>
+        <li><strong>Estrutura:</strong> O sistema lê a <strong>Coluna K</strong> (11ª coluna) e soma todos os valores numéricos contidos nela.</li>
+    </ul>
+    <ul style="text-align: left; font-size: 14px; margin-top: 10px;">
+        <li><strong>Funcionalidade: 4.2.1 Controlo Processual ORs Fechadas</strong></li>
+        <li><strong>Nome da Folha:</strong> Utiliza a <strong>primeira folha</strong> do ficheiro.</li>
+        <li><strong>Estrutura:</strong> O sistema analisa a <strong>Coluna AE</strong> (31ª coluna) e conta as ocorrências dos textos "OK", "NOK" e "não apresentada".</li>
+    </ul>
+    <ul style="text-align: left; font-size: 14px; margin-top: 10px;">
+        <li><strong>Funcionalidade: 4.3.1 Documentos por Validar no GAP</strong></li>
+        <li><strong>Nome da Folha:</strong> Deve chamar-se exatamente <code>Por validar</code>.</li>
+        <li><strong>Estrutura:</strong> A primeira linha (cabeçalho) é ignorada. As linhas seguintes devem conter 3 colunas:
+            <ul>
+                <li><strong>Coluna A:</strong> Utilizador</li>
+                <li><strong>Coluna B:</strong> -30 dias</li>
+                <li><strong>Coluna C:</strong> Total</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h5 style="color: #333; margin-top: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">4. Ficheiros da Auditoria Individual</h5>
+    <ul style="text-align: left; font-size: 14px;">
+        <li><strong>Funcionalidade: Acompanhamento do Plano de Ação Anterior (método antigo de importação XLS)</strong></li>
+        <li><strong>Nome da Folha:</strong> Utiliza a <strong>primeira folha</strong> do ficheiro.</li>
+        <li><strong>Estrutura:</strong> A primeira linha é o cabeçalho. São importadas as primeiras 5 colunas. A <strong>Coluna E</strong> deve conter o estado do acompanhamento (ex: "Correção efetuada").</li>
+    </ul>
+</details>  
+</div>
+        </div>
+    </div>
+    <div id="modalPenalizacoes" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModalPenalizacoes()">&times;</span>
+            <h3 id="modalTitulo">Aplicar Penalização para: <span></span></h3>
+
+            <input type="text" id="pesquisa-penalizacao" onkeyup="filtrarPenalizacoes()" placeholder="Pesquisar por artigo ou descrição..." title="Escreva para filtrar a lista">
+            
+            <div id="modalCorpo"></div>
+
+            <div id="campos-adicionais-container" style="display: none; margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 15px;">
+                
+                <div id="valor-manual-container" style="display: none; margin-bottom: 15px;">
+                    <label for="valor-manual-input"><b>Valor a Aplicar (€):</b></label>
+                    <input type="number" id="valor-manual-input" placeholder="0.00" step="0.01" style="width: 100px;">
+                </div>
+<div id="quantidade-container" style="margin-bottom: 15px;">
+        <label for="quantidade-penalizacao"><b>Quantidade (x N):</b></label>
+        <input type="number" id="quantidade-penalizacao" value="1" min="1" step="1" style="width: 100px;">
+    </div>
+                <div id="colaborador-container">
+                    <label for="colaborador-select"><b>Colaborador a Penalizar:</b></label>
+                    <input type="text" id="pesquisa-colaborador" onkeyup="filtrarColaboradores()" placeholder="Pesquisar por código ou nome...">
+                    <select id="colaborador-select" size="5" style="width: 100%; margin-top: 5px;">
+                        </select>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" onclick="gravarPenalizacao()">Gravar</button>
+                <button type="button" class="btn-cancel" onclick="fecharModalPenalizacoes()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="lista-auditorias-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close" onclick="document.getElementById('lista-auditorias-modal').style.display='none'">&times;</span>
+        <h3>Auditorias Guardadas na Nuvem</h3>
+        <ul id="lista-de-auditorias">
+            </ul>
+    </div>
+</div>
+
+    <div id="imagem-modal" class="modal-imagem">
+    <span class="close-modal-imagem" onclick="fecharImagemModal()">&times;</span>
+    <img class="modal-imagem-content" id="img-modal-conteudo">
+</div>
+
+<div id="progress-panel" class="progress-panel">
+    <div class="progress-header">
+        <h4>Progresso da Auditoria</h4>
+        <span id="close-progress-panel" class="close-button">&times;</span>
+    </div>
+    <div class="progress-summary">
+        <div class="progress-bar-container">
+            <div id="overall-progress-bar" class="progress-bar"></div>
+        </div>
+        <span id="overall-progress-text">0% Completo</span>
+    </div>
+    <ul id="progress-list" class="progress-list">
+        </ul>
+</div>
+
+<button type="button" id="toggle-progress-panel" class="toggle-progress-button">📊</button>
+<div id="save-status"></div>
+
+<div id="planeamento-container" class="main-content hidden">
+    <div class="container">
+        <div class="header-with-logo">
+            <img src="Amatoscar.png" alt="Logótipo da Empresa" class="company-logo">
+            <h1>Planeamento de Auditoria (Ranking de Prioridades)</h1>
+        </div>
+        <button type="button" onclick="mostrarConsolaDeGestao()" class="btn-secondary">↩️ Voltar à Consola</button>
+
+        <div style="margin: 20px 0; padding: 15px; border: 1px solid #ddd; background-color: #f9f9f9;">
+    <label for="importar-kpi-file"><strong>Importar Novo Ficheiro de KPIs (Excel):</strong></label>
+    <input type="file" id="importar-kpi-file" accept=".xls,.xlsx">
+    <p style="font-size: 12px; color: #888;">Carregue um novo ficheiro para substituir os dados atuais e recalcular o ranking.</p>
+    <p style="font-size: 14px; font-weight: bold;" id="info-ultima-importacao"></p>
+    <button type="button" class="btn-secondary" onclick="exportarRankingParaExcel()">⬇️ Exportar Cálculos para Excel</button>
+</div>
+
+        <div id="ranking-auditoria-container">
+            <p>Por favor, importe o ficheiro de KPIs para gerar o ranking.</p>
+        </div>
+    </div>
+</div>
+
+<div id="modal-detalhes-ranking" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+        <span class="close" onclick="document.getElementById('modal-detalhes-ranking').style.display='none'">&times;</span>
+        <h3 id="modal-ranking-titulo">Detalhes do Ranking</h3>
+        <div id="modal-ranking-corpo"></div>
+    </div>
+</div>
+
+    <script type="module">
+    // Importa as funções necessárias dos SDKs
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js';
+    import { 
+        getFirestore, collection, getDocs, addDoc, 
+        doc, updateDoc, deleteDoc, getDoc, onSnapshot,
+        serverTimestamp, deleteField, 
+        query, orderBy, where, setDoc // <-- GARANTIR QUE setDoc ESTÁ AQUI
+    } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js';
+    import { 
+        getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut 
+    } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js';
+    
+    // A sua configuração do projeto Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyCGgib9edDhupbfdIK1XTwXLWGa0d0SZOw",
+        authDomain: "auditoria-360-amatoscar-testes.firebaseapp.com",
+        projectId: "auditoria-360-amatoscar-testes",
+        storageBucket: "auditoria-360-amatoscar-testes.firebasestorage.app",
+        messagingSenderId: "140503782678",
+        appId: "1:140503782678:web:755f885b4621a23d9b6c37"
+    };
+    
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const storage = getStorage(app);
+
+    // Torna as variáveis e funções "públicas" (globais) para o script.fixed.js
+    window.db = db; 
+    window.auth = auth;
+    window.storage = storage;
+    window.getFirestore = getFirestore;
+    window.collection = collection;
+    window.getDocs = getDocs;
+    window.addDoc = addDoc;
+    window.doc = doc;
+    window.updateDoc = updateDoc;
+    window.deleteDoc = deleteDoc;
+    window.getDoc = getDoc;
+    window.onSnapshot = onSnapshot;
+    window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+    window.onAuthStateChanged = onAuthStateChanged;
+    window.signOut = signOut;
+    window.serverTimestamp = serverTimestamp;
+    window.deleteField = deleteField;
+    window.ref = ref;
+    window.uploadBytes = uploadBytes;
+    window.getDownloadURL = getDownloadURL;
+    window.deleteObject = deleteObject;
+    window.query = query;
+    window.orderBy = orderBy;
+    window.where = where; 
+    window.setDoc = setDoc; // <-- GARANTIR QUE setDoc É ATRIBUÍDO AQUI
+    // ------------------------------------
+</script>
+    
+   <script type="module" src="script.fixed.js"></script>
+    <style>
+    /* Estilos para o Modal de Imagem */
+    .modal-imagem {
+        display: none; /* Escondido por defeito */
+        position: fixed; /* Fica fixo na tela */
+        z-index: 1000; /* Fica por cima de tudo */
+        padding-top: 50px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto; /* Permite scroll se a imagem for muito grande */
+        background-color: rgba(0,0,0,0.9); /* Fundo preto translúcido */
+    }
+
+    .modal-imagem-content {
+        margin: auto;
+        display: block;
+        max-width: 80%;
+        max-height: 80vh;
+    }
+
+    .close-modal-imagem {
+        position: absolute;
+        top: 15px;
+        right: 35px;
+        color: #f1f1f1;
+        font-size: 40px;
+        font-weight: bold;
+        transition: 0.3s;
+        cursor: pointer;
+    }
+
+    .close-modal-imagem:hover,
+    .close-modal-imagem:focus {
+        color: #bbb;
+        text-decoration: none;
+    }
+    
+    /* Adiciona um cursor de ponteiro às imagens na pré-visualização para indicar que são clicáveis */
+    #rentabilidade_imagem_preview .image-group img {
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    #rentabilidade_imagem_preview .image-group img:hover {
+        transform: scale(1.05);
+    }
+</style>
+</body>
+</html>
+
