@@ -1,0 +1,86 @@
+﻿Artigo;Descrição;Valor;Valor variável?
+1;Falta de convocatórias de formação anexadas ás despesas;5,00 €;false
+2;Falta de conferencias pelo funcionário e/ou chefia;5,00 €;false
+3;Documentos aceites sem NIF até 100 € (fatura simplificada) e sem nome nas restantes;5,00 €;false
+4;Não pagamento de portagens e/ou comunicação para pagamento das mesmas. Paga o ónus além do débito administrativo;5,00 €;false
+5;Erro de or e/ou matrícula no débito das peças ou serviços, se for de forma intencional o valor será determinado pelo DGPV.;2,50 €;false
+6;Má conduta, ou falta de cooperação deliberada durante a auditoria;Valor a decidir em conjunto com o GAV de acordo com a gravidade;true
+7;Por faturar ao cliente final as ofertas (ex: lavagens, se é oferta não se deve debitar ao cliente).;5,00 €;false
+8;Falta de débito de peças, serviços, portes e impostos como por ex.: sgpu;Até 35 € -> 5,00 €, A Partir deste valor 100 % a preço de colaborador;true
+9;Peças/serviços debitadas abaixo do preço de custo. Não aplicável em garantia e protocolos estabelecidos;5,00 €;false
+10;Peças/serviços debitadas abaixo do preço de custo. Em garantia considera-se NA - não aplicável. E PSP no contrato. Dolo: caso a caso.;mínimo 5€, restante decisão DGPV;true
+11;Despesas pagas indevidamente, ex: pagas da caixa da AMatosCar quando são despesas da Lubripor;5,00 €;false
+12;Atraso de registo das viaturas de km’s no GAP superior a 96h;10,00 €;false
+12a;Falta de registo das viaturas de km’s no GAP;25,00 €;false
+13;Por fumar, cigarros eletrónicos ou IQOS nas instalações da empresa (em locais proibidos por lei) ou nas viaturas do Grupo A Matoscar;100,00 €;false
+14;Caso o valor a depositar seja inferior a 500€, não é necessário efetuar o depósito nesse dia. Desde que o valor acumulado de 500€ não seja atingido, os valores a depositar poderão acumular durante 3 dias, sendo que ao 4º dia, independentemente do valor, o depósito tem que ser realizado. Para efeitos de penalização existe uma tolerância de 4 dias, sendo penalizado ao 5º dia.;1% do valor das faturas não depositadas (valor mínimo 1 € valor máximo 20 €);true
+15;Por colocação do preço de custo erradamente nas fichas de compra dos serviços externos;5,00 €;false
+16;Por or´s em aberto ou vendas de peças em que o cliente não tenha crédito e tenha saído sem pagar e que estejam em aberto há + de 20 dias; A OR / Venda tem que ser obrigatoriamente fechada após 30 dias.";10,00 €;false
+17;Por passarem mais de 5 dias após a viatura de companhia de seguros ter sido entregue ao cliente sem que a mesma seja faturada. Penalização por fatura;5,00 €;false
+18;Por débito incorreto em cliente interno (ex: serviço mal efetuado e debita- se erradamente em comp. Seguros interna, …); Se for de forma intencional o valor é decidido pelo DGPV.";5,00 €;false
+19;Faltas ou sobras nas caixas das receções;25,00 €;false
+20;"Por falta de preenchimento do documento de aluguer de viatura RAC Amatoscar (onde evidencia danos, combustível) e respetivo registo no SPIGA+ na entrada e na saída;";10,00 €;false
+21;Por realização de serviço externo sem que este tenha requisição interna e validada pelo GPV e/ou Chefe de oficina (Ex: serviços externos chapa e pintura) Quando supere os 50 €;10,00 €;false
+22;Por deteção em auditoria de danos nas viaturas RAC que não estejam reportados na folha de aluguer;Caso a caso;true
+23;"A ausência de reporte de sinistro em tempo útil, ao superior hierárquico (até 4h após), direção de pós-venda e administração até 24h após); As penalizações associadas aos custos de reparação dos veículos em caso de sinistro encontram-se no capítulo Acidentes de Trabalho pertencente a secção NORMAS E PROCEDIMENTOS GERAIS.";500,00 €;false
+24;OR entregue ao processador para introdução fora do prazo para processamento injustificadamente.;10% da reparação (limite 100€);true
+25;Or´s não assinadas pelo cliente (internas excluídas);10,00 €;false
+26;Or´s: serviços adicionais não assinados/injustificados.;100% A Preço de custo;true
+27;Campos da or (clientes) devidamente preenchidos e assinados. (controlo qualidade, assinatura dos técnicos, …);1,00 € por cada campo NOK;true
+28;Verificação visual e preenchimento do impresso para verificação de danos aquando da receção do veículo preferencialmente feita na presença do Cliente;10,00 €;false
+29;Data e Hora de restituição mencionadas na or coerentes com a faturação ou evidencia de qualquer alteração acordada com o cliente;1,00 €;false
+30;Relatório de peritagem devidamente assinado pelo Cliente, perito e oficina. (Quando aplicável);10,00 €;false
+31;Não envio dos processos de C. Seguros para auditoria no máximo 15 dias consecutivos após fatura;2,00 €;false
+32;Envio até ao dia 8 de cada mês para o auditor de garantias do registo de entrega de processos ao processador de garantias.;5,00 €;false
+33;Falta de débito na OR do gás para carregamento de ar condicionado conforme o procedimento Carregamentos de ar condicionado do departamento da mecânica;5,00 €;false
+34;Pagamentos de despesas sem estar submetidas no portal;10,00 €;false
+35;Adiantamento de fundo de caixa sem estar devidamente justificado, preenchido e datado do ""vale de caixa"" (para formações, etc..)";20,00 €;false
+36;Uso injustificado/indevido de dinheiro da empresa para uso pessoal;A decidir caso a caso, com mínimo de 100 €;true
+37;Uso abusivo de auto estradas, ( ex: pessoal de PTG entra em Estremoz e vez de entrar em Montemor…);A abater a parcela do uso indevido + Custos administrativos e eventuais coimas;true
+38;Exceder plafond calçado sem haver email para os RH para pagamento da diferença;paga o excesso, + 5,00 €;true
+39;Manutenção de viaturas de serviço sem que estas estejam assinadas pelos responsáveis desta (arquivo feito na receção);5,00 €;false
+40;O cliente após ter sido avisado do término do serviço de Reparação tem no máximo 48h para devolver a viatura de RAC (após o mesmo será debitada a taxa ao cliente).;5,00 €;false
+41;Mau acondicionamento das baterias usadas, e outros resíduos assim como dos óleos sem tinas de retenção;50,00 €;false
+42;Viatura dentro da oficina sem as proteções (banco, volante, tapete, alavanca das mudanças e travão de mão);2,50 €;false
+43;Notas de crédito devidamente assinadas pelo cliente (existe uma tolerância de 60 dias entre a emissão da N/C e a mesma estar assinada/carimbada).;5,00 €;false
+44;Faturas não podem estar mais de 30 dias na seção sem serem validadas no GADOC;1,00 €;false
+45;Obrigatoriedade de colocar a nota nas preparações de entrega os serviços que vão aparecer posteriormente;10,00 €;false
+46;Or não disponível fisicamente aquando da solicitação em auditoria.;25,00 € por OR;true
+47;Or não disponível fisicamente aquando da solicitação na auditoria do mês seguinte.;50,00 € por OR;true
+48;Folhas de Caixa não elaboradas de acordo com as instruções Administrativas;5,00 €;false
+49;Viaturas reparadas sem OR e sem autorização do GAV;10,00 €;false
+50;Ausência de check-list de preparação junto das OR's de VN's devidamente preenchidos ou evidência de entrega da mesma ao departamento;10,00 €;false
+51;Planos de manutenção anexados à OR clientes e internas devidamente preenchidos, exceto marcas não representadas;10,00 €;false
+52;Teste de bateria anexados à OR's sempre que a marca assim o exigir.;5,00 €;false
+53;Não transportar, aquando da deslocação entre cidades, documentação/peças;10,00 €;false
+54;Falta de informação à equipa de auditoria, antes do fecho da OR, de peças aplicadas em OR’s de peritos;20,00 €;false
+55;Não cumprimento do plano de ação da auditoria ambiental SHST, no prazo estipulado (salvo justificação plausível);50,00 €;false
+56;Conferência // autorização pelo GPV para perca de horas (+30% para 3-10h/ +20% para +10h) Ou Sempre que a diferença seja superior a 3 h, independentemente do nº ºde horas picadas;5,00 €;false
+57;Compra de consumíveis de colisão a fornecedores não autorizados (Art. 1.2 das regras orientadoras do departamento de colisão);25 % sobre o valor da compra;true
+58;Falta de documentos no arquivo dos processos de colisão.;5,00 €;false
+59;Discrepância de valores consumidos VS faturados, em valor de peças ou tintas, em que era enquadrável um aditamento não solicitado (Art. 2.3 das regras orientadoras do departamento de colisão);50,00 €;false
+60;Discrepância de referências aplicadas VS orçamentadas em Peritagem não autorizada pelo GAV (Art. 2.4 das regras orientadoras da colisão);Caso a caso;true
+61;Não preenchimento do relatório de baixa eficiência Mão de Obra (Anexo 15) Conforme indicado no Art. 5 da colisão e Art. 2 da mecânica;5,00 €;false
+62;Não efetuar o débito de serviços externos e internos na OR conforme indicado no artigo Art. 3 das regras orientadoras da mecânica e Art. 6 da colisão.;10,00 €;false
+63;Gestão e faturação de serviços mal efetuados feita por colaborador não autorizado pelo GAV em exercício. Conforme o Art. 3 das regras gerais do departamento da colisão e Art. 1 das regras gerais do departamento da mecânica.;25,00 €;false
+64;Não retenção da margem de lucro mínima nas vendas de peças ao balcão (exterior) conforme estipulado no Art. 2.1 das peças.;5,00 €;false
+65;Não retenção da margem de lucro mínima nas vendas de peças à oficina (vendas internas) conforme o Art. 2.2 das peças.;5,00 €;false
+66;Utilização de uma viatura que não esteja devidamente registada no Spiga conforme o Art 1.1 das regras orientadoras do departamento RAC;5,00 €;false
+67;Falta de informação no preenchimento do processo de aluguer/empréstimo no Spiga ou que a mesma não corresponda à verdade (quilómetros, registo de danos, dados do utilizar), conforme o Art. 2.1 das regras orientadoras do departamento RAC;10,00 €;false
+68;Não reter a margem de lucro de 20 % no débito de serviços externos conforme indicado no artigo Art. 3.1 das regras orientadoras da mecânica e Art. 6.1 da colisão.;10,00 €;false
+69;Aluguer de veículos por valor inferiores aos da grelha de tarifas parametrizadas no SPIGA sem autorização antecipada do GAV (MAIL – comprovativo), conforme o Art. 5. das regras orientadoras do departamento RAC;10,00 €;false
+70;Empréstimo/aluguer de uma viatura F2M sem a execução de contrato na plataforma deste Grupo de aluguer e consequente circulação da viatura sem seguro ativo, conforme o Art. 6 das regras orientadoras do departamento RAC.;50,00 €;false
+71;Viaturas do grupo não priorizadas para o fornecimento de viaturas de substituição conforme o Art. 4.1 da Mecânica e 8.1 da colisão.;10,00 €;false
+72;Gestão inadequada das viaturas de substituição da Oficina que resultem no empréstimo de viaturas por tempos maiores que o necessário.;10,00 €;false
+73;Recebimento no multibanco/conta da empresa incorreta ex: fatura da Lubripor recebida no multibanco da Beiras;5,00 €;false
+74;Faturação com Imputação incorreta de serviços Internos, conforme o Art. 1 das regras orientadoras da gestão de clientes internos.;5,00 €;false
+75;Falta de peças, óleos e adblue. O GAV decide a qual colaborador será aplicada a penalização.;100 % a preço de colaborador;true
+76;Envio em tempo útil do plano de ação em resposta ao relatório da auditoria 360;100,00 €;false
+77;Não resolução de algum item do plano de ação enviado em resposta a auditoria 360;50,00 €;false
+77A;Atraso no recebimento das faturas PP ou sua liquidação;1,00 €;false
+77b;Viaturas abertas com chave em parque fechado com vedação;50,00 €;false
+77c;Viaturas abertas sem chave em parque fechado com vedação;20,00 €;false
+77d;Viaturas abertas com chave em parque aberto sem vedação;100,00 €;false
+77e;Viaturas abertas sem chave em parque aberto sem vedação;40,00 €;false
+77f;Estacionamento em lugar de deficientes;5,00 €;false
+77g;Venda suspensa há + de 30 dias a aguardar recebimento e fecho. Sem ter autorização do RN(atualizar para Paulo Isidoro);10,00 €;false

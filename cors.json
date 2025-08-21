@@ -1,0 +1,7 @@
+[
+  {
+    "origin": ["https://auditoria-360-amatoscar-testes.web.app/"],
+    "method": ["GET"],
+    "maxAgeSeconds": 3600
+  }
+]

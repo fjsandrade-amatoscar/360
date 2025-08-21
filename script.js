@@ -18,14 +18,12 @@ let modoEdicao = false;
 let auditoriasHistoricasGlobal = [];
 let auditoresSelecionadosTemporariamente = null;
 let estadoAtualFormulario = {};
-let estadoOriginalFormulario = {};
 let podeSalvar = true;
 let realtimeListener = null; 
 let dadosRankingKPIs = null;
 let rankingCalculadoGlobalmente = null;
 let documentosGapDataGlobal = [];
 let acompanhamentoPlanoAnteriorDataGlobal = [];
-let auditoriaDocRef = null;
 
 window.viaturaProntaData = viaturaProntaData; 
 window.ferramentasEspeciaisData = ferramentasEspeciaisData;
@@ -246,7 +244,6 @@ function definirAuditoriaAtiva(docId, docData) {
     
     // 1. Atualiza os dados da auditoria (o seu código que já funciona)
     idAuditoriaAtual = docId;
-    try { auditoriaDocRef = doc(db, 'auditorias', docId); } catch (e) { console.warn('Não foi possível definir auditoriaDocRef:', e); }
     document.getElementById('current_audit_id').value = docId || '';
     document.getElementById('current-report-id').textContent = nomeRelatorio;
     document.getElementById('current-tab-name-separator').style.display = 'inline';
@@ -2555,62 +2552,63 @@ window.atualizarPlanoDeAcao = function() {
 }
 
 // VERSÃO DE DEPURAÇÃO para "Adicionar Linha"
-window.adicionarLinhaPlanoAcao = function(rowObject = {}) { // Aceita um objeto agora
-    console.log(`DEBUG: A executar 'adicionarLinhaPlanoAcao' para o texto: "${rowObject.situacao_corrigir || ''}"`);
-    
-    const tableBody = document.querySelector("#plano_acao_table tbody");
-    if (!tableBody) {
-        console.error("ERRO: Não foi possível adicionar linha porque o corpo da tabela não foi encontrado.");
-        return;
-    }
-    const newRow = tableBody.insertRow();
+window.adicionarLinhaPlanoAcao = function(rowObject = {}) {
+  const tableBody = document.querySelector("#plano_acao_table tbody");
+  if (!tableBody) {
+    console.error("ERRO: Não foi possível adicionar linha porque o corpo da tabela não foi encontrado.");
+    return;
+  }
 
-    // Célula "Situação a corrigir"
-    let cell = newRow.insertCell();
-    let textarea = document.createElement('textarea');
-    textarea.rows = "2";
-    // Correção AQUI: Acessar a propriedade 'situacao_corrigir' do objeto
-    textarea.value = rowObject.situacao_corrigir || ''; 
-    cell.appendChild(textarea);
+  const newRow = tableBody.insertRow();
 
-    // As outras 4 células de textarea
-    // Correção AQUI: Acessar as propriedades corretas do objeto para cada campo
-    textarea = document.createElement('textarea'); 
-    textarea.rows = "2";
-    textarea.value = rowObject.responsavel_acao || ''; // Acessa a propriedade
-    newRow.insertCell().appendChild(textarea);
+  // helper para criar textarea + listeners
+  const mkTextarea = (value = '') => {
+    const ta = document.createElement('textarea');
+    ta.rows = 2;
+    ta.value = value || '';
+    ta.addEventListener('input',  e => { try { guardarEstadoFormulario(e); } catch(_) {} });
+    ta.addEventListener('change', e => { try { guardarEstadoFormulario(e); } catch(_) {} });
+    return ta;
+  };
 
-    textarea = document.createElement('textarea'); 
-    textarea.rows = "2";
-    textarea.value = rowObject.medida_corretiva || ''; // Acessa a propriedade
-    newRow.insertCell().appendChild(textarea);
+  // 1) Situação a corrigir
+  let cell = newRow.insertCell();
+  cell.appendChild(mkTextarea(rowObject.situacao_corrigir));
 
-    textarea = document.createElement('textarea'); 
-    textarea.rows = "2";
-    textarea.value = rowObject.data_limite || ''; // Acessa a propriedade
-    newRow.insertCell().appendChild(textarea);
+  // 2) Responsável
+  cell = newRow.insertCell();
+  cell.appendChild(mkTextarea(rowObject.responsavel_acao));
 
-    textarea = document.createElement('textarea'); 
-    textarea.rows = "2";
-    textarea.value = rowObject.acompanhamento || ''; // Acessa a propriedade
-    newRow.insertCell().appendChild(textarea);
+  // 3) Medida corretiva
+  cell = newRow.insertCell();
+  cell.appendChild(mkTextarea(rowObject.medida_corretiva));
 
-    // Célula de ações (botão remover)
-    const removeCell = newRow.insertCell();
-    const removeBtn = document.createElement('button');
-    removeBtn.textContent = 'Remover';
-    removeBtn.type = 'button';
-    removeBtn.style.backgroundColor = '#d9534f';
-    removeBtn.style.color = 'white';
-    removeBtn.style.padding = '5px 10px';
-    removeBtn.style.fontSize = '12px';
-    removeBtn.style.border = 'none';
-    removeBtn.style.borderRadius = '4px';
-    removeBtn.style.cursor = 'pointer';
-    removeBtn.onclick = function() { tableBody.removeChild(newRow); };
-    removeCell.appendChild(removeBtn);
-    return newRow; 
-    }
+  // 4) Data limite
+  cell = newRow.insertCell();
+  cell.appendChild(mkTextarea(rowObject.data_limite));
+
+  // 5) Acompanhamento
+  cell = newRow.insertCell();
+  cell.appendChild(mkTextarea(rowObject.acompanhamento));
+
+  // 6) Ações (remover)
+  const removeCell = newRow.insertCell();
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.textContent = 'Remover';
+  removeBtn.style.cssText = 'background:#d9534f;color:#fff;padding:5px 10px;font-size:12px;border:none;border-radius:4px;cursor:pointer;';
+  removeBtn.onclick = function() {
+    tableBody.removeChild(newRow);
+    try { guardarEstadoFormulario(); } catch(_) {}
+  };
+  removeCell.appendChild(removeBtn);
+
+  // marca alteração ao inserir a linha (evita “Nenhuma alteração para guardar”)
+  try { formularioAlterado = true; guardarEstadoFormulario(); } catch(_) {}
+
+  return newRow;
+};
+
 
 // NOVA FUNÇÃO para adicionar linhas à tabela de critérios
 function adicionarLinhaCriterio() {
@@ -2639,12 +2637,10 @@ function adicionarLinhaCriterio() {
         tableBody.removeChild(newRow);
     };
     removeCell.appendChild(removeBtn);
+    try { formularioAlterado = true; } catch(_) {}
+
 }
 
-/**
- * VERSÃO ATUALIZADA: Adiciona uma nova linha à tabela de "Verificação de Tempos".
- * Agora adiciona uma classe CSS aos inputs para permitir o seu alargamento.
- */
 function adicionarLinhaVerificacaoTemposDetails() {
     const tableBody = document.querySelector("#verificacao_tempos_details_table tbody");
     if (!tableBody) return null;
@@ -4991,72 +4987,64 @@ function criarPreviewDeImagem(container, base64String, inputId) {
     container.appendChild(imageGroup);
 }
 
-// Função para processar documentos GAP a partir de um ficheiro Excel
-window.processarDocsGAP = function(event) {
-    console.log("processarDocsGAP chamada. A começar o processamento do ficheiro."); 
+window.processarDocsGAP = async function(event) {
     const file = event.target.files[0];
+    const tableBody = document.getElementById('docs_gap_table_body');
+
+    if (!file) {
+        documentosGapDataGlobal = [];
+        if (tableBody) {
+            tableBody.innerHTML = '';
+        }
+        await guardarEstadoFormulario();
+        return;
+    }
+
+    handleFileUpload(event);
+    if (tableBody) {
+        tableBody.innerHTML = '';
+    }
+
     const reader = new FileReader();
+    reader.onload = async function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
 
-    reader.onload = function(e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-        const tbody = document.getElementById('docs_gap_table_body');
-        if (!tbody) {
-            showStatus('Erro: O corpo da tabela de documentos GAP (ID docs_gap_table_body) não foi encontrado.', 'error');
-            return;
-        }
-        tbody.innerHTML = '';
-
-        const headers = json[0];
-        const utilizadorIndex = headers.indexOf('Rótulos de Linha');
-        const diasIndex = headers.indexOf('Soma de -30Dias');
-        const totalIndex = headers.indexOf('Soma de Total');
-
-        if (utilizadorIndex === -1 || diasIndex === -1 || totalIndex === -1) {
-            showStatus('Atenção: O ficheiro Excel não tem as colunas esperadas (Rótulos de Linha, Soma de -30Dias, Soma de Total).', 'error');
-            return;
-        }
-
-        for (let i = 1; i < json.length; i++) {
-            const rowData = json[i];
-            const newRow = tbody.insertRow();
+            const sheetName = "Por validar";
+            if (!workbook.SheetNames.includes(sheetName)) {
+                alert(`Erro: A folha "${sheetName}" não foi encontrada no ficheiro Excel.`);
+                return;
+            }
+            const worksheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
             
-            const cell1 = newRow.insertCell(0);
-            const input1 = document.createElement('input');
-            input1.type = 'text';
-            input1.value = rowData[utilizadorIndex] || '';
-            input1.name = 'utilizador';
-            cell1.appendChild(input1);
+            documentosGapDataGlobal = [];
+if (tbody) {
+    tbody.querySelectorAll('tr').forEach(row => {
+        documentosGapDataGlobal.push({
+            utilizador: row.cells[0]?.querySelector('input')?.value || '',
+            docs_menos_30_dias: row.cells[1]?.querySelector('input')?.value || '',
+            total_docs_validar: row.cells[2]?.querySelector('input')?.value || '',
+            observacoes: ''
+        });
+    });
+}
+// Actualiza também o estado actual
+estadoAtualFormulario.documentos_gap = documentosGapDataGlobal;
             
-            const cell2 = newRow.insertCell(1);
-            const input2 = document.createElement('input');
-            input2.type = 'number';
-            input2.value = rowData[diasIndex] || 0;
-            input2.name = 'dias';
-            cell2.appendChild(input2);
+            // LIGAÇÃO CRUCIAL: Chama o guardarEstadoFormulario sem dados externos
+            await guardarEstadoFormulario();
+            
+            alert('Tabela de documentos por validar foi preenchida e guardada com sucesso!');
 
-            const cell3 = newRow.insertCell(2);
-            const input3 = document.createElement('input');
-            input3.type = 'number';
-            input3.value = rowData[totalIndex] || 0;
-            input3.name = 'total';
-            cell3.appendChild(input3);
-            
-            const cell4 = newRow.insertCell(3);
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'btn btn-danger btn-sm';
-            deleteBtn.innerHTML = '<i class="bi bi-trash"></i>';
-            cell4.appendChild(deleteBtn);
+        } catch (error) {
+            console.error("Erro ao processar o ficheiro do GAP:", error);
+            alert("Ocorreu um erro ao ler o ficheiro Excel.");
         }
-        
-        showStatus(`Importação concluída. ${json.length - 1} documentos importados.`, 'success');
     };
     reader.readAsArrayBuffer(file);
-};
+}
 
 async function guardarEstadoFormulario(event, documentosGapExternos = null) {
     console.log("Dados de ORs fechadas a guardar:", controloOrsFechadasData);
@@ -5158,22 +5146,24 @@ const acompanhamentoPlanoAnteriorData = Array.from(
     estadoAtualFormulario.acompanhamento_plano_anterior_data = acompanhamentoPlanoAnteriorDataGlobal;
 
 let documentosGapData = documentosGapExternos || [];
-    if (!documentosGapExternos) {
-        // Se os dados não foram passados (caso de salvamento manual), lê-os do HTML
-        const tbody = document.getElementById('docs_gap_table_body');
-        if (tbody) {
-            const rows = tbody.querySelectorAll('tr');
-            rows.forEach(row => {
-                documentosGapData.push({
-                    utilizador: row.cells[0]?.textContent || '',
-                    docs_menos_30_dias: row.cells[1]?.textContent || '',
-                    total_docs_validar: row.cells[2]?.textContent || '',
-                    observacoes: row.cells[3]?.querySelector('textarea')?.value || ''
-                });
+if (!documentosGapExternos) {
+    // Se os dados não foram passados (caso de salvamento manual), lê-os do HTML
+    const tbody = document.getElementById('docs_gap_table_body');
+    if (tbody) {
+        const rows = tbody.querySelectorAll('tr');
+        rows.forEach(row => {
+            documentosGapData.push({
+                utilizador: row.cells[0]?.querySelector('input')?.value || '',
+                docs_menos_30_dias: row.cells[1]?.querySelector('input')?.value || '',
+                total_docs_validar: row.cells[2]?.querySelector('input')?.value || '',
+                observacoes: row.cells[3]?.querySelector('textarea')?.value || ''
             });
-        }
+        });
     }
-    estadoAtualFormulario.documentos_gap = documentosGapDataGlobal;
+}
+// Atualiza a variável global e o estado com os dados recolhidos
+documentosGapDataGlobal = documentosGapData;
+estadoAtualFormulario.documentos_gap = documentosGapData;
 
     // 4.2.1 Imagens de rentabilidade
 const container = document.getElementById('rentabilidade_imagem_preview');
@@ -5436,9 +5426,10 @@ async function salvarDocsGAP() {
             const cells = row.cells;
             if (cells.length > 2) {
                 documentosGAPData.push({
-                    coluna_a: cells[0]?.textContent || '',
-                    coluna_b: cells[1]?.textContent || '',
-                    coluna_c: cells[2]?.textContent || ''
+                    utilizador: cells[0]?.querySelector('input')?.value || '',
+                    docs_menos_30_dias: cells[1]?.querySelector('input')?.value || '',
+                    total_docs_validar: cells[2]?.querySelector('input')?.value || '',
+                    observacoes: cells[3]?.querySelector('textarea')?.value || ''
                 });
             }
         });
@@ -5447,7 +5438,7 @@ async function salvarDocsGAP() {
     if (auditoriaDocRef) {
         try {
             await updateDoc(auditoriaDocRef, {
-                docs_gap: documentosGAPData
+                documentos_gap: documentosGAPData
             });
             console.log("Dados do GAP guardados com sucesso!");
         } catch (error) {
@@ -5456,6 +5447,7 @@ async function salvarDocsGAP() {
         }
     }
 }
+
 
 // VERSÃO ATUALIZADA - integra a limpeza do novo objeto de estado
 window.iniciarNovaAuditoria = function() {
@@ -8066,6 +8058,7 @@ dadosCompletos.total_valor_ors_curso = inputTotalValorOrs ? inputTotalValorOrs.v
     if (dadosCompletos.total_geral_avaliacao_concessao) {
         dadosCompletos.pontuacao_final = dadosCompletos.total_geral_avaliacao_concessao;
     }
+dadosCompletos.plano_de_acao = lerPlanoAcaoDaUI();
 
     return dadosCompletos;
 }
@@ -8140,97 +8133,77 @@ window.recolherDadosFormulario = function() {
     return dadosCompletos;
 };
 
+// Função para guardar o formulário completo no clique do botão
 window.guardarDadosFormularioCompleto = async function(e) {
     if (e) {
         e.preventDefault();
     }
+    const protecoesTableData = [];
+    document.querySelectorAll("#verificacao_protecoes_table tbody tr").forEach(row => {
+        protecoesTableData.push({
+            matricula: row.cells[0]?.querySelector('input')?.value || '',
+            marca: row.cells[1]?.querySelector('input')?.value || '',
+            modelo: row.cells[2]?.querySelector('input')?.value || '',
+            volante: row.cells[3]?.querySelector('select')?.value || '',
+            banco: row.cells[4]?.querySelector('select')?.value || '',
+            tapete: row.cells[5]?.querySelector('select')?.value || '',
+            travao_mao: row.cells[6]?.querySelector('select')?.value || '',
+            mudancas: row.cells[7]?.querySelector('select')?.value || '',
+            conclusao: row.cells[8]?.querySelector('textarea')?.value || ''
+        });
+    });
+    estadoAtualFormulario.protecoes_viaturas_data = protecoesTableData;
     
-    console.log("guardarDadosFormularioCompleto chamado. Lendo e salvando o formulário completo...");
-
-    if (!podeSalvar) {
-        showStatus('Ainda a processar a última gravação. Tente novamente em segundos.', 'warning');
-        return;
-    }
-    
-    // CRUCIAL: Verifique se auditoriaDocRef está definida antes de continuar
-    if (!auditoriaDocRef) {
-        showStatus('Erro: O ID da auditoria não foi carregado. Não é possível guardar os dados.', 'error');
-        return;
-    }
-
-    podeSalvar = false;
-
-    const formulario = document.getElementById('auditoria-form');
-    if (!formulario) {
-        showStatus('Erro: O formulário não foi encontrado.', 'error');
-        podeSalvar = true;
-        return;
-    }
-    
-    // Lê os campos do formulário
-    formulario.querySelectorAll('input, select, textarea').forEach(el => {
-        const key = el.name || el.id;
-        if (key) {
-            if (el.type === "checkbox") {
-                estadoAtualFormulario[key] = el.checked;
-            } else if (el.type === "select-multiple") {
-                estadoAtualFormulario[key] = Array.from(el.selectedOptions).map(opt => opt.value);
-            } else {
-                estadoAtualFormulario[key] = el.value;
-            }
+    // NOVO: 4.1.2 Verificação de Tempos – OR’s em Curso
+    const viaturasEmCursoData = [];
+    document.querySelectorAll("#viaturas-em-curso-table tbody tr").forEach(row => {
+        const orInput = row.cells[0]?.querySelector('input')?.value || '';
+        const matriculaInput = row.cells[1]?.querySelector('input')?.value || '';
+        const estadoSelect = row.cells[2]?.querySelector('select')?.value || '';
+        const dataInput = row.cells[3]?.querySelector('input')?.value || '';
+        const horaInput = row.cells[4]?.querySelector('input')?.value || '';
+        const obsTextarea = row.cells[5]?.querySelector('textarea')?.value || '';
+        
+        if (orInput || matriculaInput) {
+            viaturasEmCursoData.push({
+                ordem_reparacao: orInput,
+                matricula: matriculaInput,
+                estado: estadoSelect,
+                data: dataInput,
+                hora: horaInput,
+                observacoes: obsTextarea
+            });
         }
     });
-
-    // Lógica para a Tabela de Documentos por Validar (GAP)
-    const documentosGapDataTemp = [];
-    document.querySelectorAll("#docs_gap_table tbody tr").forEach(row => {
-        const inputs = row.querySelectorAll('input, textarea, select');
-        const rowData = {
-            utilizador: inputs[0] ? inputs[0].value : '',
-            dias: inputs[1] ? inputs[1].value : '',
-            total: inputs[2] ? inputs[2].value : ''
-        };
-        documentosGapDataTemp.push(rowData);
-    });
-    estadoAtualFormulario.documentos_gap = documentosGapDataTemp;
-    
-    // Lógica para a Tabela de Ferramentas Especiais
-    const ferramentasEspeciaisDataTemp = [];
-    document.querySelectorAll("#tabela_ferramentas_especiais tbody tr").forEach(row => {
-        const inputs = row.querySelectorAll('input, textarea, select');
-        const rowData = {
-            designacao: inputs[0] ? inputs[0].value : '',
-            numero_ferramenta: inputs[1] ? inputs[1].value : '',
-            condicao: inputs[2] ? inputs[2].value : '',
-            observacoes: inputs[3] ? inputs[3].value : ''
-        };
-        ferramentasEspeciaisDataTemp.push(rowData);
-    });
-    estadoAtualFormulario.ferramentas_especiais_data = ferramentasEspeciaisDataTemp;
-
-    // Lógica para a Tabela de Acompanhamento do Plano Anterior
-    const acompanhamentoPlanoAnteriorDataTemp = [];
-    document.querySelectorAll("#tabela_acompanhamento_plano_anterior tbody tr").forEach(row => {
-        const inputs = row.querySelectorAll('input, textarea, select');
-        const rowData = {
-            nao_conformidade: inputs[0] ? inputs[0].value : '',
-            data_limite: inputs[1] ? inputs[1].value : '',
-            responsavel: inputs[2] ? inputs[2].value : '',
-            comentarios: inputs[3] ? inputs[3].value : '',
-            situacao: inputs[4] ? inputs[4].value : ''
-        };
-        acompanhamentoPlanoAnteriorDataTemp.push(rowData);
-    });
-    estadoAtualFormulario.acompanhamento_plano_anterior = acompanhamentoPlanoAnteriorDataTemp;
-    
+    estadoAtualFormulario.viatura_pronta_data = viaturasEmCursoData;
+    estadoAtualFormulario.ferramentas_especiais_data = getFerramentasEspeciaisData();
+    // 3. Verifica se houve alguma alteração (lógica de comparação)
     const alteracoesEncontradas = JSON.stringify(estadoAtualFormulario) !== JSON.stringify(estadoOriginalFormulario);
+    
+    if (!auditoriaDocRef) {
+        showStatus('Erro: O ID da auditoria não foi carregado.', 'error');
+        return;
+    }
     
     if (!alteracoesEncontradas) {
         showStatus('Nenhuma alteração encontrada para guardar.', 'info');
-        podeSalvar = true;
         return;
     }
-
+const documentosGapDataTemp = [];
+document.querySelectorAll("#docs_gap_table tbody tr").forEach(row => {
+    const utilizador = row.cells[0]?.querySelector('input')?.value || '';
+    const menos30 = row.cells[1]?.querySelector('input')?.value || '';
+    const total = row.cells[2]?.querySelector('input')?.value || '';
+    const observacoes = row.cells[3]?.querySelector('textarea')?.value || '';
+    documentosGapDataTemp.push({
+        utilizador: utilizador,
+        docs_menos_30_dias: menos30,
+        total_docs_validar: total,
+        observacoes: observacoes
+    });
+});
+estadoAtualFormulario.documentos_gap = documentosGapDataTemp;
+    // 4. Salva no Firestore
     try {
         await updateDoc(auditoriaDocRef, estadoAtualFormulario, { merge: true });
         estadoOriginalFormulario = { ...estadoAtualFormulario };
@@ -8240,11 +8213,8 @@ window.guardarDadosFormularioCompleto = async function(e) {
     } catch (error) {
         console.error("Erro ao guardar o formulário: ", error);
         showStatus('Erro ao guardar o formulário: ' + error.message, 'error');
-    } finally {
-        podeSalvar = true;
     }
 };
-
 function salvarSecaoNaCloud(secao) {
     console.warn("[LEGADO] salvarSecaoNaCloud chamado para", secao, "→ redirecionado para guardarEstadoFormulario()");
     guardarEstadoFormulario();
@@ -8253,42 +8223,20 @@ function showStatus(message, type) {
     console.log(`[Status] ${type}: ${message}`);
     // Opcional: Adicione aqui a lógica para mostrar uma mensagem visível ao utilizador.
 }
+function lerPlanoAcaoDaUI(){
+  const body = document.querySelector('#plano_acao_table tbody');
+  const out = [];
+  if (!body) return out;
 
-// Adicione este listener para o botão "Adicionar Linha"
-document.getElementById('adicionar_linha_gap').addEventListener('click', () => {
-    // Depois de a linha ser adicionada, chame a função de salvaguarda completa
-    setTimeout(guardarDadosFormularioCompleto, 0);
-});
-
-// Adicione este listener para detectar alterações na tabela (com delegação de eventos)
-document.querySelector('#docs_gap_table_body').addEventListener('input', (event) => {
-    // Se a alteração for num dos campos, guarde os dados
-    if (event.target.closest('input, textarea, select')) {
-        guardarDadosFormularioCompleto();
-    }
-});
-
-// Adicione este listener para os botões de remover linha
-document.querySelector('#docs_gap_table_body').addEventListener('click', (event) => {
-    if (event.target.classList.contains('btn-danger')) {
-        // Esperamos a linha ser removida...
-        setTimeout(guardarDadosFormularioCompleto, 0);
-    }
-});
-
-
-
-// --- FIX ADICIONADO: manter auditoriaDocRef sincronizado com idAuditoriaAtual ---
-if (typeof window !== 'undefined') {
-  window.__syncDocRefInterval = window.__syncDocRefInterval || setInterval(() => {
-    try {
-      if (typeof idAuditoriaAtual === 'string' && idAuditoriaAtual) {
-        if (!auditoriaDocRef || (auditoriaDocRef && auditoriaDocRef.id !== idAuditoriaAtual)) {
-          auditoriaDocRef = doc(db, 'auditorias', idAuditoriaAtual);
-        }
-      }
-    } catch (e) {
-      // ignora erros (ex.: db ainda não pronto)
-    }
-  }, 1500);
+  body.querySelectorAll('tr').forEach(tr => {
+    const get = (cellIdx, sel) => tr.cells?.[cellIdx]?.querySelector(sel)?.value?.trim() || '';
+    out.push({
+      situacao_corrigir: get(0, 'textarea'),
+      responsavel_acao:  get(1, 'textarea'),
+      medida_corretiva:  get(2, 'textarea'),
+      data_limite:       get(3, 'textarea'),
+      acompanhamento:    get(4, 'textarea')
+    });
+  });
+  return out;
 }
